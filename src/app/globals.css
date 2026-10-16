@@ -1,0 +1,321 @@
+@import "tailwindcss";
+
+/* ===========================================================================
+   RAPHAEL Research Lab — design tokens
+   Mirrors the Stitch design system asset `RAPHAEL Research Lab`
+   (DARK / ROUND_EIGHT / Inter / primary #22D3EE / violet #A78BFA / blue #60A5FA)
+   =========================================================================== */
+
+@theme {
+  /* --- Surfaces: near-black with deep navy cast --- */
+  --color-void: #04060c;
+  --color-abyss: #070b14;
+  --color-surface: #0a0f1a;
+  --color-elevated: #0e1524;
+  --color-raised: #131c2e;
+
+  /* --- Hairlines --- */
+  --color-hairline: rgba(148, 163, 184, 0.14);
+  --color-hairline-strong: rgba(148, 163, 184, 0.26);
+
+  /* --- Text --- */
+  --color-ink: #e8edf7;
+  --color-ink-muted: #9aa8bf;
+  --color-ink-dim: #6b7a94;
+  --color-ink-faint: #4a5670;
+
+  /* --- Accents: three, fixed roles --- */
+  --color-cyan: #22d3ee;
+  --color-cyan-dim: #0e7490;
+  --color-violet: #a78bfa;
+  --color-violet-dim: #6d4fd6;
+  --color-azure: #60a5fa;
+
+  /* --- Semantic status (never decorative) --- */
+  --color-ready: #34d399;
+  --color-conditional: #fbbf24;
+  --color-blocked: #f87171;
+  --color-unknown: #94a3b8;
+  --color-unverified: #64748b;
+
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, SFMono-Regular, monospace;
+
+  --radius-card: 8px;
+
+  --animate-ambient: ambient 14s ease-in-out infinite;
+  --animate-sweep: sweep 3.2s ease-in-out infinite;
+  --animate-pulse-live: pulse-live 2.4s ease-in-out infinite;
+}
+
+@keyframes ambient {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 0.78; }
+}
+
+@keyframes sweep {
+  0% { transform: translateX(-120%); opacity: 0; }
+  35% { opacity: 0.55; }
+  100% { transform: translateX(220%); opacity: 0; }
+}
+
+@keyframes pulse-live {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.45; }
+}
+
+/* ===========================================================================
+   Base
+   =========================================================================== */
+
+* {
+  border-color: var(--color-hairline);
+}
+
+html {
+  color-scheme: dark;
+  /* Next 16 no longer forces scroll-behavior; opt back in explicitly. */
+  scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  background-color: var(--color-void);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  font-feature-settings: "cv02", "cv03", "cv04", "ss01";
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+::selection {
+  background: rgba(34, 211, 238, 0.24);
+  color: var(--color-ink);
+}
+
+/* Visible focus for keyboard users on every interactive surface. */
+:focus-visible {
+  outline: 2px solid var(--color-cyan);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+/* ===========================================================================
+   Utilities
+   =========================================================================== */
+
+@utility container-page {
+  width: 100%;
+  margin-inline: auto;
+  max-width: 1200px;
+  padding-inline: 24px;
+  @media (width >= 768px) { padding-inline: 32px; }
+}
+
+/* Restrained glassmorphism — only on small, isolated surfaces.
+   NEVER on a large text panel: at this alpha, underlying page text stays
+   readable through it and both layers become illegible. The assistant panel
+   is deliberately opaque for that reason. */
+@utility glass {
+  background: color-mix(in oklab, var(--color-elevated) 72%, transparent);
+  backdrop-filter: blur(14px) saturate(130%);
+  -webkit-backdrop-filter: blur(14px) saturate(130%);
+}
+
+@utility text-gradient-ink {
+  background: linear-gradient(180deg, #ffffff 0%, #a9bdd8 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Faint technical grid, used behind hero regions. */
+@utility bg-grid {
+  background-image:
+    linear-gradient(to right, rgba(148, 163, 184, 0.05) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(148, 163, 184, 0.05) 1px, transparent 1px);
+  background-size: 56px 56px;
+}
+
+@utility hairline-t {
+  border-top: 1px solid var(--color-hairline);
+}
+
+@utility hairline-b {
+  border-bottom: 1px solid var(--color-hairline);
+}
+
+/* ===========================================================================
+   Component primitives
+   =========================================================================== */
+
+.surface {
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-hairline);
+  border-radius: var(--radius-card);
+}
+
+.surface-raised {
+  background-color: var(--color-elevated);
+  border: 1px solid var(--color-hairline);
+  border-radius: var(--radius-card);
+}
+
+/* Card hover: brighten border, lift slightly. Never heavy shadow. */
+.card-interactive {
+  transition:
+    transform 260ms cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 260ms ease,
+    background-color 260ms ease;
+}
+.card-interactive:hover {
+  transform: translateY(-3px);
+  border-color: var(--color-hairline-strong);
+}
+.card-interactive:hover .card-accent-icon {
+  color: var(--color-cyan);
+}
+
+/* Primary button: soft outer glow + 1px nudge on hover/focus. */
+.btn-glow {
+  transition:
+    transform 220ms cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 260ms ease,
+    border-color 260ms ease,
+    background-color 260ms ease;
+}
+.btn-glow:hover,
+.btn-glow:focus-visible {
+  transform: translateY(-1px);
+  box-shadow:
+    0 0 0 1px rgba(34, 211, 238, 0.35),
+    0 8px 28px -10px rgba(34, 211, 238, 0.5);
+}
+
+/* Provenance chips — signature element, visually distinct from status badges. */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  /* A chip is a flex item whenever it sits inside a flex container, and
+     `inline-flex` blockifies to `flex`, which would stretch a chip to the full
+     card width inside a `flex-col`. fit-content keeps every chip shrink-wrapped
+     regardless of parent. */
+  width: fit-content;
+  max-width: 100%;
+  border-radius: 999px;
+  border-width: 1px;
+  padding: 2px 9px;
+  font-size: 10.5px;
+  line-height: 1.7;
+  font-weight: 600;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+/* Status badge — always ships a text label, never colour alone. */
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border-radius: 999px;
+  border-width: 1px;
+  padding: 3px 10px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+/* Light sweep used once when a card first enters the viewport. */
+.sweep-host {
+  position: relative;
+  overflow: hidden;
+}
+.sweep-host::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(
+    100deg,
+    transparent 0%,
+    rgba(34, 211, 238, 0.11) 45%,
+    rgba(167, 139, 250, 0.09) 55%,
+    transparent 100%
+  );
+  width: 45%;
+  animation: var(--animate-sweep);
+  animation-delay: var(--sweep-delay, 0ms);
+}
+
+/* Tables reflow to labelled stacked cards below 720px. */
+@media (max-width: 720px) {
+  .table-stack thead { display: none; }
+
+  /* The desktop min-width is applied with an `md:` prefix by the component, so
+     it never reaches this breakpoint. Asserted here as a guard: if someone
+     re-adds an unconditional min-w, the stacked cards go off-screen. */
+  .table-stack { min-width: 0; }
+
+  .table-stack,
+  .table-stack tbody,
+  .table-stack tr,
+  .table-stack td { display: block; width: 100%; min-width: 0; }
+  .table-stack tr {
+    border: 1px solid var(--color-hairline);
+    border-radius: var(--radius-card);
+    margin-bottom: 12px;
+    padding: 4px 0;
+    background: var(--color-surface);
+  }
+  .table-stack td {
+    border: 0;
+    padding: 8px 16px;
+    display: grid;
+    grid-template-columns: 7.5rem 1fr;
+    gap: 12px;
+  }
+  .table-stack td::before {
+    content: attr(data-label);
+    font-size: 10.5px;
+    font-weight: 600;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    color: var(--color-ink-dim);
+    padding-top: 2px;
+  }
+  /* Identifiers must never wrap mid-token ("AUTH-" / "000"). */
+  .table-stack td[data-label="ID"],
+  .table-stack td[data-label="Severity"] { white-space: nowrap; }
+  /* The expanded detail row must not inherit the label column treatment. */
+  .table-stack td[colspan] {
+    display: block;
+    padding: 12px 16px 16px;
+  }
+  .table-stack td[colspan]::before { content: none; }
+}
+
+/* Scrollbars inside chat / code panes */
+.scroll-thin {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-hairline-strong) transparent;
+}
+.scroll-thin::-webkit-scrollbar { width: 8px; height: 8px; }
+.scroll-thin::-webkit-scrollbar-track { background: transparent; }
+.scroll-thin::-webkit-scrollbar-thumb {
+  background: var(--color-hairline-strong);
+  border-radius: 999px;
+}
+.scroll-thin::-webkit-scrollbar-thumb:hover { background: rgba(148, 163, 184, 0.4); }
