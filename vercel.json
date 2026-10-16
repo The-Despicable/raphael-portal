@@ -1,28 +1,6 @@
 {
-  // ===========================================================================
-  // RAPHAEL PORTAL — Vercel deployment configuration
-  // ===========================================================================
-  // Do NOT add secret values here — configure them in the Vercel project
-  // settings (Environment Variables) instead.
-  //
-  // NOTE ON NEXT_PUBLIC_SITE_URL
-  // ----------------------------
-  // It is deliberately NOT set in build.env. A previous version had
-  //   "NEXT_PUBLIC_SITE_URL": "@next_public_site_url"
-  // which Vercel takes LITERALLY, so layout.tsx would have run
-  //   new URL("@next_public_site_url")
-  // and thrown at build time. Values here are never references. Set the real
-  // URL as a project env var BEFORE the first deploy.
-  // ===========================================================================
-
-  // MUST be 2. Vercel's published schema constrains this to exactly 2
-  // (minimum: 2, maximum: 2). A value of 3 fails the deploy with
-  // 400 config-json-parse-error: "Invalid vercel.json file provided".
   "version": 2,
   "framework": "nextjs",
-
-  // No crons: the previously documented /api/_maintenance/sweep does not exist.
-
   "headers": [
     {
       "source": "/(.*)",
@@ -48,49 +26,12 @@
           "value": "max-age=63072000; includeSubDomains; preload"
         },
         {
-          // Highest-risk header in this file. It defends the guest chat and the
-          // model-rendered answers against injected script. It permits
-          // 'unsafe-inline' for scripts because Next.js inlines hydration
-          // payloads, and omits 'unsafe-eval' because production does not need
-          // it. If the deployed app renders blank or unhydrated, widen this
-          // before assuming anything else is wrong.
           "key": "Content-Security-Policy",
           "value": "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self' data:; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'"
         }
       ]
     }
   ],
-
   "redirects": [],
-
-  "rewrites": [],
-
-  // ===========================================================================
-  // ENVIRONMENT VARIABLES — set these in Vercel project settings, NOT here
-  // ===========================================================================
-  //
-  // Required for full functionality:
-  //   DATABASE_URL           PostgreSQL connection string (Vercel Postgres or external)
-  //   DATABASE_POOL_URL      Pooled variant — preferred on Vercel serverless
-  //   MODEL_API_KEY          Rotated NVIDIA NIM key (do NOT reuse the .env.local value)
-  //   MODEL_BASE_URL         https://integrate.api.nvidia.com/v1
-  //   MODEL_NAME             nvidia/nemotron-3.5-lightning-30b-a3b
-  //   GUEST_SESSION_SECRET   Production random value (32-byte base64url)
-  //   MODERATION_KEY         Production random value for PATCH /api/reviews
-  //
-  // Optional:
-  //   NEXT_PUBLIC_SITE_URL   https://<project>.vercel.app
-  //   GUEST_COOKIE_NAME      rph_guest (default)
-  //   GUEST_COOKIE_SECURE    true (default in production)
-  //   MODEL_MAX_TOKENS       1024 (default)
-  //   MODEL_DISABLE_THINKING true (default)
-  //   MODEL_DEBUG_RAW        false (default — do not enable in production)
-  //   RATE_LIMIT_ASSISTANT   12 (default — cost control for paid model calls)
-  //
-  // The local .env.local sets RATE_LIMIT_ASSISTANT=0 for testing. That file is
-  // git-ignored and does NOT reach the deployment, so production keeps the
-  // built-in default of 12/min.
-  //
-  // Do NOT set NEXT_PUBLIC_* for any secret. Only NEXT_PUBLIC_SITE_URL is safe.
-  // ===========================================================================
+  "rewrites": []
 }
