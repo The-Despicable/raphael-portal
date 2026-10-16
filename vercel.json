@@ -15,7 +15,10 @@
   // URL as a project env var BEFORE the first deploy.
   // ===========================================================================
 
-  "version": 3,
+  // MUST be 2. Vercel's published schema constrains this to exactly 2
+  // (minimum: 2, maximum: 2). A value of 3 fails the deploy with
+  // 400 config-json-parse-error: "Invalid vercel.json file provided".
+  "version": 2,
   "framework": "nextjs",
 
   // No crons: the previously documented /api/_maintenance/sweep does not exist.
