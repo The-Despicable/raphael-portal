@@ -102,7 +102,7 @@ export function NavBar() {
           <div className="flex items-center gap-2">
             {releaseReadiness.approved ? (
               <a
-                href="https://github.com"
+                href="https://github.com/The-Despicable/raphael-2.0-rbsv2r"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="hidden rounded-md border border-hairline px-3 py-1.5 text-[13px] text-ink-muted transition-colors hover:border-hairline-strong hover:text-ink sm:inline-block"

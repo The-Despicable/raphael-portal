@@ -24,33 +24,47 @@ import type { ProvenanceCategory } from "@/content/status";
  */
 
 describe("release readiness gate", () => {
-  it("is currently CLOSED — public source access is not approved", () => {
-    expect(releaseReadiness.approved).toBe(false);
+  it("records that the source link IS published (owner decision 2026-10-18)", () => {
+    // The repository was already public; this records the owner decision to link
+    // it from the site. Publishing the link is not a claim that the repo is clean.
+    expect(releaseReadiness.approved).toBe(true);
   });
 
-  it("records why the gate is closed", () => {
+  it("records why the residuals are listed", () => {
     expect(releaseReadiness.reason.length).toBeGreaterThan(20);
     expect(releaseReadiness.outstanding.length).toBeGreaterThan(0);
     expect(releaseReadiness.reviewedOn).toBe("2026-10-16");
   });
 
-  it("names licence, credential-history and offensive-tooling as outstanding", () => {
+  it("names credential-history and offensive-tooling as outstanding residuals", () => {
+    // The licence residual was resolved on 2026-10-18 by adding an MIT LICENSE to
+    // the repository. The other two are unresolved and must stay enumerated.
     const joined = releaseReadiness.outstanding.join(" ").toLowerCase();
-    expect(joined).toMatch(/licen[cs]e/);
     expect(joined).toMatch(/credential/);
     expect(joined).toMatch(/offensive/);
+    expect(joined).not.toMatch(/no licen[cs]e/);
   });
 
-  it("keeps RAPHAEL's repository URL null while the gate is closed", () => {
-    // CORRECTED: this previously asserted that EVERY project's repositoryUrl was
-    // null while the gate was closed. That over-applied Raphael's release
-    // restriction to unrelated projects and would have blocked a legitimately
-    // verified link elsewhere. The gate is scoped to the project it describes.
-    if (!releaseReadiness.approved) {
-      const raphael = projects.find((p) => p.id === "raphael")!;
-      expect(raphael.repositoryUrl).toBeNull();
-      expect(raphael.linkStatus).toBe("pending_review");
-    }
+  it("publishes RAPHAEL's repository URL only at the owner's verified URL", () => {
+    // The link is live, so the URL must be exactly the owner's repository and the
+    // status must be explicit. A published link is never guessed or inferred.
+    const raphael = projects.find((p) => p.id === "raphael")!;
+    expect(raphael.linkStatus).toBe("verified");
+    expect(raphael.repositoryUrl).toBe(
+      "https://github.com/The-Despicable/raphael-2.0-rbsv2r",
+    );
+  });
+
+  it("keeps the published link accompanied by its residuals", () => {
+    // An open link must not read as an endorsement of the code: the caveat has to
+    // travel with it, naming the residuals that remain.
+    const raphael = projects.find((p) => p.id === "raphael")!;
+    expect(raphael.caveat).toBeTruthy();
+    const caveat = String(raphael.caveat);
+    expect(caveat).toMatch(/MIT/i);
+    expect(caveat).toMatch(/credential/i);
+    expect(caveat).toMatch(/offensive/i);
+    expect(caveat).toMatch(/not release-approved/i);
   });
 
   it("does not apply Raphael's release gate to unrelated projects", () => {
@@ -500,16 +514,23 @@ describe("public claim accuracy", () => {
     // opposite of the list underneath it.
     const home = read("src/app/page.tsx");
     expect(home).not.toMatch(/EvidenceTag label="VERIFIED"/);
-    expect(home).toMatch(/Release readiness · not approved/);
+    // The repository is published now, so the heading no longer claims the link
+    // is withheld. It still enumerates the residuals that travel with the link.
+    expect(home).toMatch(/Published repository · residuals/);
+    expect(home).not.toMatch(/Release readiness · not approved/);
   });
 
-  it("keeps the release gate closed and its blockers enumerated", () => {
-    expect(releaseReadiness.approved).toBe(false);
-    expect(releaseReadiness.outstanding.length).toBeGreaterThanOrEqual(3);
+  it("keeps the published repository's residuals enumerated", () => {
+    expect(releaseReadiness.approved).toBe(true);
+    // Two residuals remain after the licence was resolved.
+    expect(releaseReadiness.outstanding.length).toBeGreaterThanOrEqual(2);
     const joined = releaseReadiness.outstanding.join(" ").toLowerCase();
-    expect(joined).toMatch(/licen[cs]e/);
     expect(joined).toMatch(/credential/);
     expect(joined).toMatch(/offensive/);
+  });
+
+  it("records the repository as MIT-licensed now that a LICENSE exists", () => {
+    expect(releaseReadiness.reason).toMatch(/MIT-licensed/);
   });
 
   it("defines what a VERIFIED tag means wherever it is used unqualified", () => {
@@ -582,8 +603,9 @@ describe("evidence provenance record", () => {
     expect(ASSESSMENT.date).toBe("2026-10-16");
   });
 
-  it("keeps the source-release gate closed", () => {
-    expect(releaseReadiness.approved).toBe(false);
+  it("records the published source link and its residuals", () => {
+    expect(releaseReadiness.approved).toBe(true);
+    expect(releaseReadiness.outstanding.length).toBeGreaterThanOrEqual(2);
   });
 
   it("classifies only with the declared categories", () => {

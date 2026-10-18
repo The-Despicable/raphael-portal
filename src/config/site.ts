@@ -1,24 +1,28 @@
 /**
  * Central, typed site configuration.
  *
- * SECURITY / RELEASE NOTE
- * -----------------------
- * `releaseReadiness` below is a hard gate. The Raphael repository is NOT cleared
- * for public release: as of the 2026-10-16 assessment it has no license, has
- * credentials exposed in history with rotation pending, and contains unresolved
- * offensive tooling. While `approved === false` the UI must render a neutral
- * repository-availability notice and must NOT render a source link, an archive
- * download, or any "fork / clone / view source" affordance.
+ * RELEASE POSITION (2026-10-18)
+ * -----------------------------
+ * The Raphael source repository is PUBLIC and is now linked from this site. The
+ * owner approved publishing that link, so `releaseReadiness.approved` is true and
+ * the gate no longer withholds the source affordance.
  *
- * Flipping `approved` to true is an explicit owner decision, not a code detail.
+ * Publishing the link is NOT a statement that the repository is clean. Residuals
+ * remain and are recorded in `outstanding`, surfaced on the project card and on
+ * the home page. Do not delete them to tidy the page: they describe the published
+ * artifact as it actually is.
  */
 
 export interface ReleaseReadiness {
-  /** Owner has reviewed and approved public release of the source repository. */
+  /** Owner has approved publishing a link to the source repository. */
   approved: boolean;
-  /** Short reason shown in the neutral availability notice. */
+  /** Short statement of the release position, shown in the availability notice. */
   reason: string;
-  /** What is still required before this can flip to true. */
+  /**
+   * Residuals recorded against the PUBLISHED artifact. This is not a to-do list
+   * that gates publication, and it is not empty merely because the link is live:
+   * an honest published repo still has to disclose what is wrong with it.
+   */
   outstanding: readonly string[];
   /** ISO date of the review that produced this state. */
   reviewedOn: string;
@@ -98,13 +102,12 @@ export interface ProjectCard {
 export const SITE_ORIGIN_FALLBACK = "https://raphael-portal.vercel.app";
 
 export const releaseReadiness: ReleaseReadiness = {
-  approved: false,
+  approved: true,
   reason:
-    "The source repository has not cleared release review. Public source availability is pending owner approval.",
+    "The Raphael source repository is public, MIT-licensed and linked from this site. Two residuals remain: its history records a credential exposure, and offensive-tooling references stay in-tree. They are listed so the link is not read as an endorsement of the code.",
   outstanding: [
-    "No license file is present, so the project is not licensed for reuse.",
-    "Credentials were exposed in repository history; rotation was recorded as pending on 2026-10-16.",
-    "Unresolved offensive tooling (payload modules and a volumetric-attack service) remain in-tree.",
+    "Repository history records a credential exposure (2026-10-04); rotation is not independently confirmed.",
+    "Offensive-tooling references remain in-tree (e.g. references/offensive-tactics/, orchestrator/chains/).",
   ],
   reviewedOn: "2026-10-16",
 };
@@ -209,14 +212,16 @@ export const projects: readonly ProjectCard[] = [
     description:
       "A large autonomous-security research artifact built around a canonical cognitive runtime and a deny-by-default policy decision point. Assessed on 2026-10-16 as NOT_READY: the central research claim is self-graded UNRESOLVED and governance is blocked at gate G3.",
     tech: ["Python", "Orchestration", "Policy engines", "Evidence graphs"],
-    repositoryUrl: null,
+    repositoryUrl: "https://github.com/The-Despicable/raphael-2.0-rbsv2r",
     docsUrl: null,
-    // Gate is CLOSED (see releaseReadiness). The repository exists but is not
-    // released, so the link is withheld by policy — not by absence of a URL.
-    linkStatus: "pending_review",
-    availabilityNote:
-      "Source not publicly released. Pending owner release review (no license; credential-history remediation outstanding).",
-    caveat: "Design reference. Not production-ready and not independently verified.",
+    // Published. The URL points at the owner's own repository and resolves, so the
+    // status is "verified" rather than "pending_review". The residuals travel in
+    // `caveat` and in releaseReadiness.outstanding: an open link must not be read
+    // as a statement that the repository is clean.
+    linkStatus: "verified",
+    availabilityNote: null,
+    caveat:
+      "Public and MIT-licensed. Its history records a credential exposure and offensive-tooling references remain in-tree. Research artifact: not production-ready, not independently verified, not release-approved.",
   },
   {
     id: "vesper",

@@ -221,8 +221,13 @@ export default function HomePage() {
                       above three unresolved release blockers, which reads as
                       "release readiness: verified" — the opposite of what the
                       list states. The gate state is a recorded determination,
-                      not an independently verified one. */}
-                  <Eyebrow>Release readiness · not approved</Eyebrow>
+                      not an independently verified one.
+
+                      UPDATED 2026-10-18: the repository is now published and
+                      linked, so the heading no longer says "not approved".
+                      The list still enumerates the residuals that travel WITH
+                      the published link. */}
+                  <Eyebrow>Published repository · residuals</Eyebrow>
                   <EvidenceTag label="DOCUMENTED" />
                 </div>
                 <ul className="space-y-2.5 text-[13.5px] leading-relaxed text-ink-muted">
@@ -234,8 +239,8 @@ export default function HomePage() {
                   ))}
                 </ul>
                 <Note tone="caution">
-                  Because release review has not passed, no source link, archive or clone affordance
-                  is published on this site.
+                  The repository is public and linked. These residuals are recorded so the link is
+                  not read as an endorsement of the code.
                 </Note>
               </Card>
             </Reveal>

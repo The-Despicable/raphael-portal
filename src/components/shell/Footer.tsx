@@ -47,7 +47,7 @@ export function Footer() {
             </span>
             {releaseReadiness.approved ? (
               <a
-                href="https://github.com"
+                href="https://github.com/The-Despicable/raphael-2.0-rbsv2r"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-[13px] text-ink-muted transition-colors hover:text-ink"
@@ -56,10 +56,14 @@ export function Footer() {
               </a>
             ) : (
               <p className="text-[13px] leading-relaxed text-ink-faint">
-                Source availability pending release review. No repository link is published, because
-                the project has no license and credential-history remediation is outstanding.
+                Source link withheld by policy. The repository carries residual caveats (a recorded
+                credential exposure in history, offensive-tooling references in-tree).
               </p>
             )}
+            <p className="text-[11px] leading-relaxed text-ink-faint">
+              Published source (MIT) carries residual caveats: a recorded credential exposure in
+              its history, and offensive-tooling references in-tree.
+            </p>
             <Link
               href="/community"
               className="text-[13px] text-ink-muted transition-colors hover:text-ink"

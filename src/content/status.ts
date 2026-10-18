@@ -453,14 +453,16 @@ export const blockers: readonly Blocker[] = [
     id: "SEC-003",
     severity: "P1",
     type: "RISK",
-    title: "No license, and offensive tooling in-tree",
+    title: "Offensive tooling in-tree; SBOM and authorized-use posture outstanding",
     whatIsKnown:
-      "No license file exists while offensive payload modules and a volumetric-attack service remain in the tree.",
-    whyItMatters: "Distribution and legal exposure, plus an unresolved authorized-use posture.",
-    evidence: "Verified absence of a license; directory inventory inspected directly.",
-    needed: "Choose a license, produce an SBOM, and settle an authorized-use posture.",
+      "An MIT LICENSE was added on 2026-10-18, which resolves the licensing ambiguity: the project is now licensed for reuse. Offensive payload modules and a volumetric-attack service remain in the tree, and no SBOM has been produced.",
+    whyItMatters:
+      "Distribution and legal exposure, plus an unresolved authorized-use posture. A permissive licence grants reuse rights; it says nothing about whether that reuse is appropriate.",
+    evidence:
+      "LICENSE present at the repository root (MIT), confirmed 2026-10-18; directory inventory inspected directly.",
+    needed: "Settle an authorized-use posture and produce an SBOM.",
     owner: "Operator (human decision)",
-    disposition: "Blocking for public release",
+    disposition: "Partly resolved — licence added; authorized-use posture still open",
   },
   {
     id: "CRED-001",
