@@ -100,14 +100,6 @@ export const env = {
   modelDisableThinking: read("MODEL_DISABLE_THINKING") !== "false",
 
   /**
-   * Debug aid. When set server-side, the assistant response carries the RAW
-   * model text so citation-parsing behaviour can be inspected. It is read from
-   * the environment only — there is no request-side or client-side way to set
-   * it, so it cannot be turned on by a visitor.
-   */
-  modelDebugRaw: read("MODEL_DEBUG_RAW") === "true",
-
-  /**
    * Per-rule rate-limit override, e.g. RATE_LIMIT_ASSISTANT=0 disables it.
    * Returns null when unset or unparseable, so a typo falls back to the safe
    * built-in default rather than disabling a protection by accident.

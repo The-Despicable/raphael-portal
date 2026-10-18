@@ -157,7 +157,12 @@ export function AskAiLauncher() {
         setBusy(false);
       }
     },
-    [busy],
+    // `turns` MUST be a dependency. The request body is built from the
+    // conversation so far so that follow-ups ("tell me in more detail") can be
+    // resolved. Leaving it out captures a stale `turns`, which silently drops
+    // the prior turns from the history the server receives — the exact
+    // regression the follow-up support exists to fix.
+    [busy, turns],
   );
 
   return (

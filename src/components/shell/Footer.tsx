@@ -61,10 +61,10 @@ export function Footer() {
               </p>
             )}
             <Link
-              href="/community#conduct"
+              href="/community"
               className="text-[13px] text-ink-muted transition-colors hover:text-ink"
             >
-              Community guidelines
+              Contact
             </Link>
             <p className="mt-1 text-[11px] leading-relaxed text-ink-faint">
               Release review: {releaseReadiness.reviewedOn}

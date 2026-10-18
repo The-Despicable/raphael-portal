@@ -33,6 +33,13 @@ export const RULES = {
   review: { limit: 3, windowMs: 10 * 60_000 },
   suggestion: { limit: 3, windowMs: 60 * 60_000 },
   assistant: { limit: 12, windowMs: 60_000 },
+  /**
+   * The privileged endpoint. Rate limiting is NOT about fairness here — it caps
+   * how many credential guesses an attacker can make per minute. The constant
+   * time comparison prevents a timing leak; it does nothing about an unlimited
+   * number of attempts.
+   */
+  moderation: { limit: 10, windowMs: 60_000 },
   report: { limit: 5, windowMs: 10 * 60_000 },
 } as const satisfies Record<string, RateLimitRule>;
 

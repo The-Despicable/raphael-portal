@@ -809,37 +809,6 @@ const ORIENTATION = [
   "• Which external papers does the project cite, and what is their status?",
 ].join("\n\n");
 
-/** Debug-only: return the raw provider text. Server-env gated; see env.modelDebugRaw. */
-export async function __debugRaw(
-  question: string,
-  history: AssistantTurn[] = [],
-): Promise<string> {
-  const requestBody: Record<string, unknown> = {
-    model: env.modelName,
-    temperature: 0.1,
-    stream: false,
-    max_tokens: env.modelMaxTokens,
-    messages: [
-      { role: "system", content: SYSTEM_PROMPT },
-      ...buildHistory(history),
-      { role: "user", content: `RECORDS:\n${buildRecordsBlock()}\n\nQUESTION: ${question}` },
-    ],
-  };
-  if (env.modelDisableThinking) {
-    requestBody.chat_template_kwargs = { enable_thinking: false };
-  }
-  const res = await fetch(`${env.modelBaseUrl!.replace(/\/$/, "")}/chat/completions`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json", Authorization: `Bearer ${env.modelApiKey}` },
-    body: JSON.stringify(requestBody),
-  });
-  const json = (await res.json()) as {
-    choices?: { message?: { content?: string | null; reasoning_content?: string | null } }[];
-  };
-  const m = json.choices?.[0]?.message;
-  return `${m?.content ?? ""}\n---REASONING---\n${m?.reasoning_content ?? ""}`;
-}
-
 export async function answer(
   question: string,
   history: AssistantTurn[] = [],

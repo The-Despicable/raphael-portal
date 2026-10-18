@@ -40,7 +40,12 @@ export const researchPapers: readonly ResearchPaper[] = [
   {
     id: "dream-rsi",
     title: "Dream-RSI",
-    authors: null,
+    // Author names and ordering transcribed from the arXiv record's own
+    // publication metadata, which lists all 17. Recorded in full rather than
+    // abbreviated, so a reader can check the list against the source instead of
+    // trusting a shortened form that looks equally authoritative.
+    authors:
+      "Tong Zheng, Xidong Wu, Zheng Zhang, Zhankui He, Chaoyi Zhang, Benjamin Coleman, Ruoqiao Wei, Di Bai, Haolin Liu, Rui Liu, Xue Wang, Yue Zhuan, Wang-Cheng Kang, Renkai Xiang, Heng Huang, Xinwu Cheng, Yunsong Guo",
     year: 2026,
     venue: "arXiv preprint",
     doi: null,
@@ -58,10 +63,15 @@ export const researchPapers: readonly ResearchPaper[] = [
     whereApplied:
       "Adopted as inspiration at the planning level, not as code. The master roadmap (section 19.3, 'Dream-RSI boundary adopted by Raphael') records a deliberately narrow adoption: improve the exploration policy rather than the protected agent/evaluator, reuse completed history as a replay world, evaluate candidate policies cheaply offline, and retain the accepted policy for a later round. No code was copied and no dependency exists.",
     supportingEvidence:
-      "Adoption is recorded in the project roadmap (section 19.3 and appendix B.2, which also lists what was explicitly NOT adopted: no copied code, no assumption that the Arena is already replay, no assumption that replay alone proves future improvement). Separately, the project's internal notes record the associated repository as empty with no code ever committed, and Dream-RSI absent from a 226-entry public index. Conceptual adoption is not implementation.",
+      "Adoption is recorded in the project roadmap (section 19.3, 'Dream-RSI boundary adopted by Raphael', and appendix B.2), which also lists what was explicitly NOT adopted: no copied code, no assumption that the Arena is already replay, no assumption that replay alone proves future improvement. That roadmap sits in an integrity-checked archive whose recorded audited baseline re-verifies exactly as it was recorded, so the adoption record is authenticated as a record. Separately, two supporting facts come only from unsourced internal notes — that the associated repository is empty, and Dream-RSI's absence from the public index — and they are not independently authenticated; the site's provenance record classifies them accordingly. Conceptual adoption is not implementation, and authenticating the record of adoption does not implement, validate or reproduce the paper's method.",
     lastVerified: "2026-10-16",
     reviewStatus: "REVIEWED",
     featured: true,
+    // Presented in the secondary "Conceptual influences" section, not the primary
+    // card grid. It shaped planning — specifically the exploration policy — but no
+    // code was copied and no dependency was introduced, so a full-size research
+    // card would overstate it. The arXiv link is retained there.
+    displayTier: "CONCEPTUAL_INFLUENCE",
   },
   {
     id: "awesome-rsi-index",
@@ -87,6 +97,10 @@ export const researchPapers: readonly ResearchPaper[] = [
       "Project notes record this list at 226 entries with Dream-RSI not listed. Treat the entry count as recorded, not independently re-counted by this site. Being listed here as a reference index consulted is not a claim that it influenced anything.",
     lastVerified: "2026-10-16",
     reviewStatus: "REVIEWED",
+    // A discovery aid consulted only to cross-check one recorded fact about the
+    // Dream-RSI entry. Not an influence and not a source of an adopted concept,
+    // so it is kept as a compact provenance note rather than a research card.
+    displayTier: "RELATED_SOURCE",
   },
 
   /* ------------------------------------------------------------------ */
@@ -194,6 +208,29 @@ export const researchPapers: readonly ResearchPaper[] = [
     reviewStatus: "REVIEWED",
   },
 ];
+
+/**
+ * Primary research cards.
+ *
+ * The project's own research and architecture records. External work that only
+ * influenced planning, and reference lists consulted to audit an entry, are
+ * deliberately excluded: they are presented in the secondary "Conceptual
+ * influences" section instead, where a full card cannot imply that they are
+ * records of the same kind as the internal entries.
+ */
+export const primaryResearchPapers: readonly ResearchPaper[] = researchPapers.filter(
+  (p) => (p.displayTier ?? "PRIMARY") === "PRIMARY",
+);
+
+/** External work that shaped planning without being implemented. */
+export const conceptualInfluences: readonly ResearchPaper[] = researchPapers.filter(
+  (p) => p.displayTier === "CONCEPTUAL_INFLUENCE",
+);
+
+/** References consulted to audit another entry. Not a source of any concept. */
+export const relatedSources: readonly ResearchPaper[] = researchPapers.filter(
+  (p) => p.displayTier === "RELATED_SOURCE",
+);
 
 export const provenanceMeta: Record<
   Provenance,
@@ -312,17 +349,26 @@ export const researchMappings: readonly ResearchMapping[] = [
     paperId: "dream-rsi",
     coreIdea: "Reusing an agent's own historical discovery traces to drive further exploration.",
     component: "AGENT_SELF_IMPROVEMENT",
-    whereApplied: "NOT APPLIED. No development record establishes that Raphael used this work.",
+    // CORRECTED 2026-10-18. This row previously read "NOT APPLIED. No
+    // development record establishes that Raphael used this work" with status
+    // NOT_YET_INVESTIGATED, which contradicted researchPapers[dream-rsi]
+    // (SOURCE_OF_INSPIRATION / REFERENCED_IN_DECISION), the dreamRsiFeature
+    // block, and the roadmap record — and both renderings were visible on this
+    // page at once. The paper-level record is the correct one: concepts were
+    // adopted into planning, and no code was ever copied.
+    whereApplied:
+      "CONCEPTUALLY ADOPTED IN PLANNING, NOT IMPLEMENTED. The master roadmap (section 19.3 and appendix B.2) records a deliberately narrow adoption of specific ideas into the exploration policy. No code was copied and no dependency exists.",
     evidence:
-      "Absence of evidence. The internal notes classify it as related research and a candidate, and record structural concerns about its replay.",
-    status: "NOT_YET_INVESTIGATED",
+      "Recorded adoption in the project roadmap, section 19.3 and appendix B.2, which also lists what was explicitly not adopted. The source is an arXiv preprint; no independent verification of its method, and none of any claimed adoption, was performed.",
+    status: "REFERENCED_IN_DECISION",
   },
   {
     paperId: "awesome-rsi-index",
     coreIdea: "A public index of recursive-self-improvement work, used here as an independent audit trail.",
     component: "AGENT_SELF_IMPROVEMENT",
     whereApplied: "Used only to cross-check one recorded fact about the Dream-RSI entry.",
-    evidence: "Internal notes record 226 entries with Dream-RSI absent.",
+    evidence:
+      "Internal notes record the list at 226 entries with Dream-RSI absent. The absence was checked directly against the published index and confirmed. Treat the entry count as recorded, not independently re-counted by this site.",
     status: "CONCEPTUALLY_RELATED",
   },
 ];

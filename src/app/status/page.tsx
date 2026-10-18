@@ -255,7 +255,7 @@ export default function StatusPage() {
               <SectionHeader
                 eyebrow="Timeline"
                 title="Milestones, source-supported"
-                lede="Where a date or a causal link is reconstructed rather than recorded, it is marked approximate."
+                lede="Where a date or a causal link is reconstructed rather than recorded, it is marked approximate. A VERIFIED tag means the event itself is recorded in the project's own documents — it does not mean Raphael was executed and independently validated. The dated assessment ran no tests of its own, so its verified claims are structural and documentary."
               />
             </Reveal>
 

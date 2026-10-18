@@ -167,6 +167,19 @@ export interface ResearchPaper {
   lastVerified: string | null;
   reviewStatus: "REVIEWED" | "AWAITING_REVIEW";
   featured?: boolean;
+  /**
+   * Editorial placement on the research page. Undefined is treated as "PRIMARY"
+   * so the internal records keep rendering as full cards unchanged.
+   *
+   * CONCEPTUAL_INFLUENCE marks external work that shaped planning without being
+   * implemented. It belongs in the secondary influences section rather than the
+   * primary grid, because a full-size card beside the project's own records
+   * would imply a standing the evidence does not support.
+   *
+   * RELATED_SOURCE marks a reference consulted to audit another entry, not a
+   * source of any adopted concept.
+   */
+  displayTier?: "PRIMARY" | "CONCEPTUAL_INFLUENCE" | "RELATED_SOURCE";
 }
 
 export interface ResearchMapping {

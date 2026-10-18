@@ -1,9 +1,11 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { timingSafeEqual } from "node:crypto";
-import { getStore } from "@/lib/store";
+import { resolveStore } from "@/lib/store/http";
 import { env } from "@/lib/env";
 import { fieldErrors } from "@/lib/validation";
+import { consume, rateLimitHeaders } from "@/lib/rate-limit";
+import { readSession } from "@/lib/session";
 
 /**
  * Moderation administration.
@@ -39,6 +41,18 @@ function authorised(request: Request): boolean {
 }
 
 export async function PATCH(request: Request) {
+  // Rate limit FIRST, before the credential check, so that a wrong key is
+  // throttled rather than being retried indefinitely. Timing-safe comparison
+  // stops a timing leak; it does nothing about volume.
+  const session = await readSession();
+  const limit = await consume("moderation", session?.sessionId ?? null);
+  if (!limit.allowed) {
+    return NextResponse.json(
+      { error: "Too many attempts. Try again later." },
+      { status: 429, headers: rateLimitHeaders(limit) },
+    );
+  }
+
   if (!env.moderationConfigured) {
     return NextResponse.json(
       {
@@ -51,7 +65,10 @@ export async function PATCH(request: Request) {
   }
 
   if (!authorised(request)) {
-    return NextResponse.json({ error: "Invalid moderation credential." }, { status: 403 });
+    return NextResponse.json(
+      { error: "Invalid moderation credential." },
+      { status: 403, headers: rateLimitHeaders(limit) },
+    );
   }
 
   let payload: unknown;
@@ -69,7 +86,9 @@ export async function PATCH(request: Request) {
     );
   }
 
-  const store = await getStore();
+  const resolved = await resolveStore();
+  if (!resolved.ok) return resolved.response;
+  const { store } = resolved;
   const updated = await store.setModeration(
     parsed.data.targetKind,
     parsed.data.targetId,

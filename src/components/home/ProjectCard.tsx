@@ -29,10 +29,14 @@ const ROLE_META: Record<
  *
  * LINK POLICY
  * -----------
- * A repository link renders ONLY when a verified URL exists AND the release gate
- * permits it. Otherwise the card shows an availability note. There is no
- * fallback to a guessed URL and no "View repository" affordance that goes
+ * A repository link renders ONLY when `linkStatus === "verified"` AND a URL is
+ * present. Otherwise the card shows an availability note that says WHY. There is
+ * no fallback to a guessed URL and no "View repository" affordance that goes
  * nowhere.
+ *
+ * The state is read from `linkStatus`, not inferred from a null URL: a withheld
+ * link ("we reviewed this and are not publishing it yet") and a missing one
+ * ("we never established a URL") are different facts and must not look alike.
  */
 export function ProjectCard({
   project,
@@ -44,11 +48,12 @@ export function ProjectCard({
   staggerIndex?: number;
 }) {
   const role = ROLE_META[project.role];
-  const hasVerifiedLink = Boolean(project.repositoryUrl);
+  const hasVerifiedLink = project.linkStatus === "verified" && Boolean(project.repositoryUrl);
+  const hasDocsLink = project.linkStatus === "verified" && Boolean(project.docsUrl);
 
   return (
     <article
-      className={`group relative overflow-hidden transition-[transform,border-color,background-color] duration-300 hover:-translate-y-[3px] ${
+      className={`group relative overflow-hidden transition-[transform,border-color,background-color] duration-300 hover:-translate-y-[3px] motion-reduce:transition-none motion-reduce:hover:translate-y-0 ${
         featured
           ? "glass rounded-xl border border-cyan/30 p-6 hover:border-cyan/50"
           : "surface p-5 hover:border-hairline-strong"
@@ -98,24 +103,45 @@ export function ProjectCard({
         </ul>
       ) : null}
 
-      <div className="relative mt-5 border-t border-hairline pt-4">
+      <div className="relative mt-5 flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-hairline pt-4">
         {hasVerifiedLink ? (
           <a
             href={project.repositoryUrl!}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 text-[13px] font-medium text-azure transition-opacity hover:opacity-80"
+            // Names the project rather than repeating "View repository" verbatim,
+            // so a screen-reader user browsing links knows which project this is.
+            aria-label={`View the ${project.name} repository on GitHub (opens in a new tab)`}
+            className="inline-flex items-center gap-1.5 rounded text-[13px] font-medium text-azure underline-offset-4 transition-opacity hover:opacity-80 hover:underline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-cyan"
           >
-            View repository
+            View on GitHub
             <ExternalLink size={12} aria-hidden />
             <span className="sr-only">(opens in a new tab)</span>
           </a>
         ) : (
           <p className="flex gap-2 text-[12px] leading-snug text-ink-faint">
             <Lock size={12} aria-hidden className="mt-0.5 shrink-0" />
-            <span>{project.availabilityNote ?? "No verified public link."}</span>
+            <span>
+              <span className="sr-only">{`${project.name}: `}</span>
+              {/* Distinguishes a link withheld by review from one never established. */}
+              {project.linkStatus === "pending_review" ? "Repository pending review. " : ""}
+              {project.availabilityNote ?? "No verified public link."}
+            </span>
           </p>
         )}
+
+        {hasDocsLink ? (
+          <a
+            href={project.docsUrl!}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label={`Documentation for ${project.name} (opens in a new tab)`}
+            className="inline-flex items-center gap-1.5 rounded text-[13px] font-medium text-ink-muted underline-offset-4 transition-colors hover:text-ink hover:underline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-cyan"
+          >
+            Documentation
+            <ExternalLink size={12} aria-hidden />
+          </a>
+        ) : null}
       </div>
 
       <span className="sr-only">{role.note}</span>

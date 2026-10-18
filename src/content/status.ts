@@ -35,6 +35,29 @@ import type {
  * This is a dated snapshot, not live telemetry. `ASSESSMENT` is the single
  * source of truth for "as of" language, and any statement of the form "is" must
  * be read as "was, on 2026-10-16".
+ *
+ * ASSESSMENT ARTIFACT INTEGRITY
+ * ------------------------------
+ * The source assessment is retained in an integrity-checked archive. The archive
+ * carries a checksum manifest covering the assessment and its index, and the
+ * audited baseline the assessment names — repository revision, tree, commit
+ * count, working-tree shape and stash count — was independently re-verified
+ * against the tree it describes. Individual artifacts the assessment relies on
+ * carry their own recorded checksums and were verified against those records.
+ *
+ * What those checks establish, stated narrowly:
+ *   - the archived files are the ones the manifest was written for, and neither
+ *     the assessment nor its manifest has changed since that manifest was made;
+ *   - the audited baseline is reproducible exactly as recorded;
+ *   - the transcription below is a faithful rendering of that artifact.
+ *
+ * What they do NOT establish, and this distinction matters more than the list
+ * above: none of it is independent proof that any conclusion about Raphael is
+ * true. Artifact identity is not claim validation. The assessment executed no
+ * tests of its own and states that its verified claims are structural and
+ * documentary; nothing here re-derives its findings, and a canonical source can
+ * faithfully record an incorrect conclusion. `revalidated` therefore stays
+ * `false`, and no reader should infer otherwise from the integrity checks.
  */
 
 export const ASSESSMENT = {
@@ -58,6 +81,180 @@ export const ASSESSMENT = {
     "Secret-handling rules were observed: credential values were neither accessed nor reproduced.",
   ],
 } as const;
+
+/**
+ * How a finding published on this site is sourced.
+ *
+ * Deliberately coarse. The question this answers is NOT "is the claim true?" —
+ * no entry can answer that. It answers "where did this text come from, and how
+ * much can that origin vouch for?" Those are different questions, and conflating
+ * them is how a citation becomes a substitute for evidence.
+ */
+export type ProvenanceCategory =
+  /**
+   * An authenticated canonical source artifact: its recorded checksums verify,
+   * and the baseline it names reproduces exactly as recorded.
+   *
+   * Vouches for the artifact's identity and integrity. Vouches for nothing about
+   * whether the artifact's conclusions are correct.
+   */
+  | "canonical"
+  /**
+   * An internal note or record with no independent integrity authentication.
+   *
+   * The weakest tier, and the tier most likely to be quoted as if it were
+   * stronger. Recorded explicitly so that promoting one to `canonical` becomes a
+   * visible, testable change rather than a silent drift.
+   */
+  | "unauthenticated_internal_note"
+  /**
+   * A summary or transcription maintained by this portal.
+   *
+   * Fidelity to the source can be checked; the source itself is checked
+   * separately, and a faithful transcription of an unverified source inherits
+   * that weakness rather than curing it.
+   */
+  | "transcription";
+
+export interface EvidenceProvenanceEntry {
+  /** Finding group, or a stable claim identifier where one applies. */
+  findingId: string;
+  /** Short label for what this entry covers. */
+  subject: string;
+  category: ProvenanceCategory;
+  /** Precisely what this category establishes for this finding. */
+  establishes: string;
+  /**
+   * Precisely what it does not establish.
+   *
+   * Never empty by contract. An entry that cannot state its own limit is not
+   * specific enough to be recorded.
+   */
+  doesNotEstablish: string;
+}
+
+/**
+ * Per-finding provenance, classified one finding at a time.
+ *
+ * Findings are classified individually on purpose. An authenticated artifact does
+ * not authenticate every claim sitting near it: the assessment being canonical
+ * says nothing about an unsourced note quoted alongside it, and one verified
+ * supporting document does not make an evaluation result validated. Where a
+ * finding draws on more than one tier it is split across entries rather than
+ * collapsed to the strongest tier present.
+ *
+ * Contains no paths, checksums, artifact identifiers or operational detail.
+ */
+export const evidenceProvenance: readonly EvidenceProvenanceEntry[] = [
+  {
+    findingId: "ASSESSMENT-ARTIFACT",
+    subject: "The dated assessment this site transcribes",
+    category: "canonical",
+    establishes:
+      "The archived assessment and its index are the artifacts the integrity manifest was written for, and neither has changed since it was made.",
+    doesNotEstablish:
+      "That any conclusion in the assessment is true. Artifact identity is not claim validation, and the assessment executed no tests of its own.",
+  },
+  {
+    findingId: "RPH-BASELINE",
+    subject: "Repository identity and baseline state cited in the current-state snapshot",
+    category: "canonical",
+    establishes:
+      "Revision, tree, commit count, working-tree shape and stash count reproduce exactly as the assessment recorded them.",
+    doesNotEstablish:
+      "Any property of the code at that revision beyond its identity, and nothing about whether that code behaves as described.",
+  },
+  {
+    findingId: "RPH-READINESS-SCORECARD",
+    subject: "The ten completion-readiness dimension ratings",
+    category: "canonical",
+    establishes:
+      "The ratings are transcribed faithfully from the assessment's scorecard; each dimension's rating matches the source.",
+    doesNotEstablish:
+      "That the ratings are correct measurements. They are the independent assessor's judgements, not instrument readings, and none was re-derived here.",
+  },
+  {
+    findingId: "RPH-BLOCKER-REGISTER",
+    subject: "Blocker identifiers, severities and dispositions",
+    category: "canonical",
+    establishes:
+      "The register reproduces the assessment's blocker table: every identifier and severity matches, with none added or omitted.",
+    doesNotEstablish:
+      "That severities were independently validated, or that any blocker has since been resolved. Severity is the assessor's assignment.",
+  },
+  {
+    findingId: "EVAL-001-DATASET",
+    subject: "Absence of the canonical evaluation holdout dataset",
+    category: "canonical",
+    establishes:
+      "The reproducibility manifest declares a specific dataset by checksum and size, and that dataset is not present, so cited effect sizes cannot be re-derived.",
+    doesNotEstablish:
+      "That the historical results were wrong. Unattributable is not the same as incorrect, and the drift record explicitly declines to claim otherwise.",
+  },
+  {
+    findingId: "EVAL-001-DRIFT",
+    subject: "The UNVERIFIABLE_DRIFT classification of the frozen instrument",
+    category: "unauthenticated_internal_note",
+    establishes:
+      "An internal drift-adjudication record reports that some pinned instrument digests no longer match the tree. The record is self-described as non-authoritative and pending an authority decision.",
+    doesNotEstablish:
+      "An adjudicated finding. The record is not covered by the archive's integrity manifest and carries no independent authentication, so its classification is a proposal rather than a ruling.",
+  },
+  {
+    findingId: "AUTH-000",
+    subject: "The empty trusted-issuer registry and the invalidated self-adoption",
+    category: "canonical",
+    establishes:
+      "The governance ledger is integrity-checked and records four adoptions subsequently invalidated for lack of established authority, alongside a registry holding no trusted issuer.",
+    doesNotEstablish:
+      "That any decision is ratified or that an authority exists. It establishes the opposite: that neither currently does.",
+  },
+  {
+    findingId: "CRED-001",
+    subject: "The recorded credential exposure and pending rotation",
+    category: "canonical",
+    establishes:
+      "An exposure record is retained and its checksum matches the archive manifest, establishing that exposure occurred, that the working tree was redacted, and that rotation was recorded as pending.",
+    doesNotEstablish:
+      "That rotation has since happened, or that the exposed values were never used. Values were not accessed and are not reproduced anywhere on this site.",
+  },
+  {
+    findingId: "DREAM-RSI-ADOPTION",
+    subject: "The recorded conceptual adoption of Dream-RSI into planning",
+    category: "canonical",
+    establishes:
+      "An integrity-checked roadmap records a deliberately narrow conceptual adoption of specific ideas into the exploration policy, and states that no code was copied and no dependency added.",
+    doesNotEstablish:
+      "That the method is implemented, validated or reproduced. Conceptual adoption into planning is not implementation, and no experiment is claimed.",
+  },
+  {
+    findingId: "DREAM-RSI-STRUCTURAL-CONCERN",
+    subject: "The recorded concern that the published replay is one-sided",
+    category: "unauthenticated_internal_note",
+    establishes:
+      "An internal note records a specific mechanism by which replay could reward spending less while remaining blind to discovering more. It is offered as a hypothesis to check.",
+    doesNotEstablish:
+      "A peer-reviewed critique or a verified property of the published artifact. This site has not re-derived the claim against the source, and the note is not integrity-authenticated.",
+  },
+  {
+    findingId: "AWESOME-RSI-ENTRY-COUNT",
+    subject: "The recorded entry count for the consulted reference index",
+    category: "unauthenticated_internal_note",
+    establishes:
+      "An internal note records the index at a stated entry count and records that Dream-RSI is not listed. The absence was checked directly against the published index; the count was not re-counted.",
+    doesNotEstablish:
+      "That the recorded count is current or independently verified, and it confers no influence, contribution or adopted concept on Raphael.",
+  },
+  {
+    findingId: "SITE-TRANSCRIPTION",
+    subject: "This site's own summary of all source material",
+    category: "transcription",
+    establishes:
+      "The content published here is a faithful, and in several places deliberately more conservative, rendering of the source artifacts recorded above.",
+    doesNotEstablish:
+      "Anything about Raphael beyond what those sources themselves establish. Transcribing a source faithfully does not make its conclusions true.",
+  },
+];
 
 export const readinessScorecard: readonly ReadinessDimension[] = [
   {

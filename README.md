@@ -49,7 +49,7 @@ npm run smoke      # boots a real server and exercises the guest flows over HTTP
 | `/raphael` | Goals, interactive canonical-chain diagram, design principles, proposed vs observed architecture, legacy perimeter, research preview |
 | `/research` | Filterable paper library, research-to-implementation matrix, Dream-RSI treatment, open questions, suggest-a-paper |
 | `/status` | Dated assessment, readiness scorecard, filterable blocker register, evidence layering, timeline, strategic options |
-| `/community` | Code of conduct, guest chat, reviews & feedback, moderation and privacy notes |
+| `/community` | Contact & Connect: email, Telegram, Instagram and X |
 
 ### API
 
@@ -300,6 +300,7 @@ Lucide, Zod, `pg`, Vitest.
 | Rate limits are per-instance | Move counters into Postgres for strict enforcement on serverless |
 | Personal profile is placeholder text | Edit `src/config/site.ts` |
 | Project links unverified | Withhold rather than guess a URL |
+| Sessions are per-instance under the memory store | Set `DATABASE_URL` for shared, durable session state |
 
 ## Licence
 

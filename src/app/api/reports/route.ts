@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { getStore } from "@/lib/store";
+import { resolveStore } from "@/lib/store/http";
 import { readSession } from "@/lib/session";
 import { consume, rateLimitHeaders } from "@/lib/rate-limit";
 import { fieldErrors } from "@/lib/validation";
@@ -47,7 +47,9 @@ export async function POST(request: Request) {
     );
   }
 
-  const store = await getStore();
+  const resolved = await resolveStore();
+  if (!resolved.ok) return resolved.response;
+  const { store } = resolved;
   await store.addReport({
     ...parsed.data,
     reporterDigest: session?.sessionId ?? null,

@@ -24,7 +24,11 @@ import { ProjectCard } from "@/components/home/ProjectCard";
 import { SummaryBar } from "@/components/status/SummaryBar";
 
 export const metadata: Metadata = {
-  title: "Home",
+  // Stated in full rather than relying on the layout's `title.template`: the
+  // root page is not a nested segment, so the template is not applied to it and a
+  // bare "Home" was emitted as the <title>. A LinkedIn/SEO preview needs the
+  // descriptive title, not the word "Home".
+  title: "Raphael — Open Research & Architecture Portal",
   description:
     "Portfolio and project overview for an independent documentation portal covering the Raphael AI security research project.",
 };
@@ -212,8 +216,14 @@ export default function HomePage() {
             <Reveal dir="right">
               <Card className="space-y-4">
                 <div className="flex items-center justify-between gap-3">
-                  <Eyebrow>Release readiness</Eyebrow>
-                  <EvidenceTag label="VERIFIED" />
+                  {/* CORRECTED 2026-10-18. This card was headed
+                      "Release readiness" with a bare VERIFIED tag directly
+                      above three unresolved release blockers, which reads as
+                      "release readiness: verified" — the opposite of what the
+                      list states. The gate state is a recorded determination,
+                      not an independently verified one. */}
+                  <Eyebrow>Release readiness · not approved</Eyebrow>
+                  <EvidenceTag label="DOCUMENTED" />
                 </div>
                 <ul className="space-y-2.5 text-[13.5px] leading-relaxed text-ink-muted">
                   {releaseReadiness.outstanding.map((item) => (
@@ -402,7 +412,7 @@ export default function HomePage() {
                     href="/community"
                     className="btn-glow inline-flex items-center gap-2 rounded-md border border-cyan/40 bg-cyan/10 px-5 py-2.5 text-[14px] font-medium text-cyan"
                   >
-                    Join the community
+                    Get in touch
                     <ArrowRight size={14} aria-hidden />
                   </Link>
                   <Link

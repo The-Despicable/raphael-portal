@@ -404,13 +404,17 @@ export default function RaphaelPage() {
             </Stagger>
 
             <Reveal>
-              <p className="mt-8">
+              {/* A div, not a p: DatedSource already renders its own <p>, and a
+                  <p> may only contain phrasing content, so nesting one inside
+                  another is invalid HTML and triggers a hydration error. This
+                  wrapper exists only to supply the top margin. */}
+              <div className="mt-8">
                 <DatedSource>
                   Architecture and assessment content transcribed from the {ASSESSMENT.date} assessment
                   and cited project records. Local paths, remote names, hashes and operational detail
                   were deliberately excluded.
                 </DatedSource>
-              </p>
+              </div>
             </Reveal>
           </Container>
         </Section>

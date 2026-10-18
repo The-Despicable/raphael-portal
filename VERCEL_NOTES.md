@@ -63,7 +63,6 @@ Set these in Vercel project settings. **Never** in this file.
 | `NEXT_PUBLIC_SITE_URL` | unset |
 | `MODEL_MAX_TOKENS` | `1024` |
 | `MODEL_DISABLE_THINKING` | `true` |
-| `MODEL_DEBUG_RAW` | `false` — never enable in production |
 | `RATE_LIMIT_ASSISTANT` | `12` |
 
 ### Notes

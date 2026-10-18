@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getStore } from "@/lib/store";
+import { resolveStore } from "@/lib/store/http";
 import { readSession } from "@/lib/session";
 import { consume, rateLimitHeaders } from "@/lib/rate-limit";
 import { fieldErrors, LIMITS, messageSchema } from "@/lib/validation";
@@ -24,7 +24,9 @@ export async function GET(request: Request) {
     LIMITS.historyHardCap,
   );
 
-  const store = await getStore();
+  const resolved = await resolveStore();
+  if (!resolved.ok) return resolved.response;
+  const { store } = resolved;
   const messages = await store.listMessages(limit);
 
   return NextResponse.json({
@@ -72,7 +74,9 @@ export async function POST(request: Request) {
     );
   }
 
-  const store = await getStore();
+  const resolved = await resolveStore();
+  if (!resolved.ok) return resolved.response;
+  const { store } = resolved;
   const message = await store.addMessage({
     nickname: session.nickname,
     accent: session.accent ?? "cyan",

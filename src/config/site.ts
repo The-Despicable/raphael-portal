@@ -25,9 +25,12 @@ export interface ReleaseReadiness {
 }
 
 export interface Profile {
-  /** EDITABLE PLACEHOLDER — replace with the real name before publication. */
+  /**
+   * Portal identity. Kept neutral because no personal name was supplied; this
+   * field is never rendered as a person's name.
+   */
   name: string;
-  /** True while any field below still contains placeholder text. */
+  /** True while any field below still contains unfilled placeholder text. */
   isPlaceholder: boolean;
   headline: string;
   bio: string;
@@ -45,6 +48,24 @@ export interface NavItem {
   description: string;
 }
 
+/**
+ * Repository link state, stated explicitly rather than inferred from a null URL.
+ *
+ * A null `repositoryUrl` alone cannot distinguish "we deliberately withheld this"
+ * from "we never found one", and a reviewer should not have to guess which.
+ */
+export type ProjectLinkStatus =
+  /** URL confirmed to point at the owner's own repository. Safe to link. */
+  | "verified"
+  /**
+   * A repository exists, but release or link review has not passed. The link is
+   * deliberately withheld. Scoped PER PROJECT: Raphael's release gate does not
+   * automatically apply to unrelated projects.
+   */
+  | "pending_review"
+  /** No reliable URL was established. Never guessed, never fabricated. */
+  | "unverified";
+
 export interface ProjectCard {
   id: string;
   name: string;
@@ -53,16 +74,28 @@ export interface ProjectCard {
   /** Longer description used on the home page project panel. */
   description: string;
   tech: readonly string[];
+  /** Rendered only when linkStatus is "verified". */
   repositoryUrl: string | null;
+  /** Secondary documentation/demo link, same rule as repositoryUrl. */
   docsUrl: string | null;
+  linkStatus: ProjectLinkStatus;
   /**
-   * Rendered instead of a repository link when the release gate is closed, or
-   * when no verified URL was supplied. Never a fabricated URL.
+   * Rendered instead of a repository link whenever the link is withheld.
+   * Never a fabricated URL.
    */
   availabilityNote: string | null;
   /** Optional short honest caveat shown on the card. */
   caveat: string | null;
 }
+
+/**
+ * Canonical public origin for absolute metadata URLs.
+ *
+ * `NEXT_PUBLIC_SITE_URL` takes precedence when set. This documented production
+ * origin is the fallback so canonical and Open Graph URLs are always absolute —
+ * a relative OG image URL cannot be fetched by social crawlers such as LinkedIn's.
+ */
+export const SITE_ORIGIN_FALLBACK = "https://raphael-portal.vercel.app";
 
 export const releaseReadiness: ReleaseReadiness = {
   approved: false,
@@ -77,10 +110,13 @@ export const releaseReadiness: ReleaseReadiness = {
 };
 
 export const profile: Profile = {
-  name: "Your Name",
-  isPlaceholder: true,
+  // No personal name or biography has been supplied for this site, so none is
+  // invented. The hero heading is fixed text and does not render this field;
+  // it is kept only so the shape stays stable if a name is provided later.
+  name: "Raphael Research Portal",
+  isPlaceholder: false,
   headline: "Security research · governed agents · evidence provenance",
-  bio: "EDITABLE PLACEHOLDER — replace this paragraph with a two or three sentence biography. This site is an independent research portal; the profile column on the home page is populated entirely from this configuration file and nothing is inferred at runtime.",
+  bio: "An independent research portal documenting Raphael — an ambitious and unfinished AI security research project — and the governance, evidence-provenance and reproducibility questions it raises. Everything published here is marked with what is implemented, what has been tested, and what is still unresolved.",
   currentFocus: "Documenting Raphael's architecture and evidence status honestly",
   focusAreas: [
     "Autonomous agents",
@@ -89,17 +125,75 @@ export const profile: Profile = {
     "Reproducibility",
     "AI safety evaluation",
   ],
-  githubProfileUrl: null,
-  contactUrl: null,
+  githubProfileUrl: "https://github.com/The-Despicable",
+  // Internal route, not an external address: points at Contact & Connect.
+  contactUrl: "/community",
   contactLabel: "Contact",
 };
+
+export interface ContactChannel {
+  id: string;
+  /** Platform name, rendered as the card heading. */
+  platform: string;
+  /** The exact handle or address shown to the visitor. */
+  display: string;
+  /** The exact destination. */
+  href: string;
+  /**
+   * True when the destination leaves this site. Drives `target`/`rel` and the
+   * screen-reader "(opens in a new tab)" hint, so a mailto: link is never
+   * mislabelled as an external destination.
+   */
+  external: boolean;
+}
+
+/**
+ * Public contact channels, in display order.
+ *
+ * The displayed text and the link target are separate fields on purpose: the
+ * handle is shown verbatim and never rewritten, so a capitalisation or spelling
+ * mistake cannot be hidden behind a correct-looking link.
+ *
+ * Only channels the owner supplied are listed. Nothing here is inferred, and no
+ * channel is added on speculation.
+ */
+export const contactChannels: readonly ContactChannel[] = [
+  {
+    id: "email",
+    platform: "Email",
+    display: "rot7051@gmail.com",
+    href: "mailto:rot7051@gmail.com",
+    external: false,
+  },
+  {
+    id: "telegram",
+    platform: "Telegram",
+    display: "@zack405",
+    href: "https://t.me/zack405",
+    external: true,
+  },
+  {
+    id: "instagram",
+    platform: "Instagram",
+    display: "@yaser.hussain19",
+    href: "https://www.instagram.com/yaser.hussain19/",
+    external: true,
+  },
+  {
+    id: "x",
+    platform: "X",
+    display: "@Hussain69Yaser",
+    href: "https://x.com/Hussain69Yaser",
+    external: true,
+  },
+];
 
 export const navItems: readonly NavItem[] = [
   { href: "/", label: "Home", description: "Portfolio and project overview" },
   { href: "/raphael", label: "Raphael", description: "Goals and documented architecture" },
   { href: "/research", label: "Research", description: "Papers and application mapping" },
   { href: "/status", label: "Project Status", description: "Current state, blockers, roadmap" },
-  { href: "/community", label: "Community", description: "Guest chat and reviews" },
+  { href: "/community", label: "Contact", description: "Email, Telegram, Instagram and X" },
 ];
 
 /**
@@ -117,6 +211,9 @@ export const projects: readonly ProjectCard[] = [
     tech: ["Python", "Orchestration", "Policy engines", "Evidence graphs"],
     repositoryUrl: null,
     docsUrl: null,
+    // Gate is CLOSED (see releaseReadiness). The repository exists but is not
+    // released, so the link is withheld by policy — not by absence of a URL.
+    linkStatus: "pending_review",
     availabilityNote:
       "Source not publicly released. Pending owner release review (no license; credential-history remediation outstanding).",
     caveat: "Design reference. Not production-ready and not independently verified.",
@@ -131,21 +228,55 @@ export const projects: readonly ProjectCard[] = [
     tech: ["Python", "Monotonic gates", "Claim ladders"],
     repositoryUrl: null,
     docsUrl: null,
-    availabilityNote: "Independent project. Repository link not yet configured for this site.",
+    // Checked: no Vesper repository exists under the owner's GitHub account.
+    // A URL is therefore absent because none was established, not because it is
+    // being withheld. Recorded distinctly so the card cannot imply otherwise.
+    linkStatus: "unverified",
+    availabilityNote:
+      "No public repository was located for this project, so no link is shown rather than a guessed one.",
     caveat: "Do not assume Raphael's security properties carry over.",
+  },
+  {
+    id: "computer-control-mcp",
+    name: "Computer Control MCP",
+    role: "portfolio",
+    summary:
+      "A Windows-first computer-control layer for AI agents, exposing desktop observation and input over MCP.",
+    description:
+      "An MCP server that gives an agent a bounded computer capability layer: observation and perception, mouse and keyboard input, window control, and synchronisation. Its defining property is safety binding — every perception call mints a screen_id, mutations must arrive within a freshness window and are re-gated in-process against the foreground window and monitor layout immediately before any input is injected. Every mutation returns a receipt with an explicit CONFIRMED, REJECTED or UNCERTAIN outcome, and the server reports evidence only: it never retries or compensates. Perception uses UI Automation first and OCR only as a fallback, with oversized regions tiled on a two-dimensional grid and tile-local coordinates offset back to global space. A persistent PowerShell worker pool, split across control and perception lanes, keeps a slow OCR pass from starving a window switch. It carries no provider logic and no development-loop logic — it is the computer capability layer only.",
+    tech: [
+      "TypeScript",
+      "Model Context Protocol",
+      "PowerShell",
+      "UI Automation",
+      "OCR",
+      "Zod",
+    ],
+    repositoryUrl: "https://github.com/The-Despicable/computer-control-mcp",
+    docsUrl: null,
+    linkStatus: "verified",
+    availabilityNote: null,
+    caveat:
+      "Public repository with no license file, so it is not licensed for reuse. Version 1.0.0; unit and gate test suites are present.",
   },
   {
     id: "rupewatch",
     name: "RupeWatch",
     role: "portfolio",
-    summary: "Supporting project — placeholder entry.",
+    summary: "A currency-tracking project. Repository link withheld pending review.",
     description:
-      "EDITABLE PLACEHOLDER — describe RupeWatch here, or remove this card from src/config/site.ts if it should not be featured.",
+      "A currency-tracking project. Its repository is deliberately not linked from this site. A credential file was committed in that repository's history and was flagged for rotation and history remediation; that remediation has not been independently confirmed, so the link is withheld rather than promoted on the strength of an unverified fix.",
     tech: [],
     repositoryUrl: null,
     docsUrl: null,
-    availabilityNote: "Repository URL not verified. Link intentionally withheld rather than guessed.",
-    caveat: null,
+    // Withheld on purpose — NOT an absent URL. Mirrors how Raphael's own card
+    // distinguishes "we are not publishing this yet" from "we never found one".
+    // Promoting this to a verified link requires the credential-history
+    // remediation to be independently confirmed first; it is not a styling choice.
+    linkStatus: "pending_review",
+    availabilityNote:
+      "Link withheld pending review: a committed credential file in that repository's history was flagged for rotation and remediation, and that status is not independently confirmed. No link is shown rather than a link that outruns the evidence.",
+    caveat: "Not promoted until the credential-history review is independently confirmed resolved.",
   },
 ];
 

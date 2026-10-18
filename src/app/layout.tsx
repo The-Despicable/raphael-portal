@@ -5,6 +5,7 @@ import { NavBar } from "@/components/shell/NavBar";
 import { Footer } from "@/components/shell/Footer";
 import { AskAiLauncher } from "@/components/assistant/AskAiLauncher";
 import { env } from "@/lib/env";
+import { SITE_ORIGIN_FALLBACK } from "@/config/site";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -29,8 +30,27 @@ const SITE_TITLE = "Raphael — Open Research & Architecture Portal";
 const SITE_DESCRIPTION =
   "Independent documentation of Raphael, an ambitious and unfinished AI security research project: its documented architecture, the papers behind it, its dated readiness assessment, and how to contribute or challenge it.";
 
+/**
+ * Absolute base for canonical and Open Graph URLs.
+ *
+ * `NEXT_PUBLIC_SITE_URL` wins when set and well-formed. It falls back to the
+ * documented production origin rather than `undefined`, because an undefined
+ * `metadataBase` makes Next emit a RELATIVE og:image URL, which social crawlers
+ * (LinkedIn included) cannot fetch — the preview silently degrades to no image.
+ * A malformed value is treated as absent instead of throwing at build time.
+ */
+function resolveMetadataBase(): URL {
+  const candidate = env.siteUrl ?? SITE_ORIGIN_FALLBACK;
+  try {
+    return new URL(candidate);
+  } catch {
+    return new URL(SITE_ORIGIN_FALLBACK);
+  }
+}
+
 export const metadata: Metadata = {
-  metadataBase: env.siteUrl ? new URL(env.siteUrl) : undefined,
+  metadataBase: resolveMetadataBase(),
+  alternates: { canonical: "/" },
   title: {
     default: SITE_TITLE,
     template: `%s · Raphael Research Portal`,

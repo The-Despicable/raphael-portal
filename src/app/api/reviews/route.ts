@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { getStore } from "@/lib/store";
+import { resolveStore } from "@/lib/store/http";
 import { readSession } from "@/lib/session";
 import { consume, isDuplicateSubmission, rateLimitHeaders, recordSubmission } from "@/lib/rate-limit";
 import { fieldErrors, reviewSchema } from "@/lib/validation";
@@ -30,7 +30,9 @@ export async function GET(request: Request) {
   const limit = Math.min(Math.max(Number(url.searchParams.get("limit") ?? 10) || 10, 1), 50);
   const offset = Math.max(Number(url.searchParams.get("offset") ?? 0) || 0, 0);
 
-  const store = await getStore();
+  const resolved = await resolveStore();
+  if (!resolved.ok) return resolved.response;
+  const { store } = resolved;
   const page = await store.listReviews(limit, offset, true);
 
   return NextResponse.json({
@@ -79,7 +81,9 @@ export async function POST(request: Request) {
     );
   }
 
-  const store = await getStore();
+  const resolved = await resolveStore();
+  if (!resolved.ok) return resolved.response;
+  const { store } = resolved;
   const moderation = env.moderationConfigured ? "VISIBLE" : "PENDING";
 
   const review = await store.addReview({

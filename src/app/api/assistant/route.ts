@@ -93,32 +93,33 @@ export async function POST(request: Request) {
   // and a fully-assembled answer lets the UI render sources and answer together.
   const result = await answer(parsed.data, history);
 
+  // The response body is an ALLOWLIST, not a spread of internal state.
+  //
+  // This endpoint previously spread `result` and conditionally attached the raw
+  // provider text as `__raw` when MODEL_DEBUG_RAW was set. That was a leak
+  // waiting to happen: the raw field carries the model's reasoning trace and any
+  // text the prompt induced, and a stray environment variable would have
+  // published it. The capability has been REMOVED rather than left switched off,
+  // because "off by default" is a configuration state that can be flipped by
+  // accident, by a deploy, or by someone copying an .env file.
+  //
+  // Only these fields may ever reach the public client.
   return NextResponse.json(
     {
-      ...result,
+      mode: result.mode,
+      text: result.text,
+      citations: result.citations.map((c) => ({
+        docId: c.docId,
+        docTitle: c.docTitle,
+        section: c.section,
+        label: c.label,
+      })),
+      notice: result.notice,
       corpusSize,
       capabilities: env.describeCapabilities(),
-      ...(env.modelDebugRaw ? { __raw: await readRaw(parsed.data, history) } : {}),
     },
     { headers: rateLimitHeaders(limit) },
   );
-}
-
-/**
- * Debug-only second call used to inspect raw model output.
- *
- * Only reachable when MODEL_DEBUG_RAW is set in the SERVER environment. It
- * exists because citation parsing cannot be reasoned about reliably from the
- * classified result alone: an answer can be correct yet wrongly labelled, and
- * the only way to tell why is to see what the model actually emitted.
- */
-async function readRaw(question: string, history: AssistantTurn[]): Promise<string> {
-  try {
-    const mod = await import("@/lib/assistant");
-    return (await mod.__debugRaw(question, history)).slice(0, 1200);
-  } catch (e) {
-    return `debug unavailable: ${e instanceof Error ? e.message : "unknown"}`;
-  }
 }
 
 /** Capability probe so the UI can show an honest configuration state. */
