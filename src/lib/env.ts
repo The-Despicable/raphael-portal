@@ -120,6 +120,26 @@ export const env = {
   moderationKey: read("MODERATION_KEY"),
 
   /* ---------------------------------------------------------------------- */
+  /* Outbound notification                                                   */
+  /* ---------------------------------------------------------------------- */
+
+  /**
+   * Telegram bot token and destination chat, used to deliver paper suggestions
+   * to the maintainer.
+   *
+   * SECURITY: a bot token is a full-control credential for the bot — it can read
+   * updates and send as the bot. It is read here and nowhere else, it is never
+   * prefixed with NEXT_PUBLIC_, and it must never be returned in a response,
+   * written to a log, or committed. Only the boolean `notifyConfigured` below is
+   * ever exposed to a client.
+   *
+   * A bot cannot open a conversation: `telegramChatId` only exists after the
+   * destination has messaged the bot at least once.
+   */
+  telegramBotToken: read("TELEGRAM_BOT_TOKEN"),
+  telegramChatId: read("TELEGRAM_CHAT_ID"),
+
+  /* ---------------------------------------------------------------------- */
   /* Derived capability flags                                                */
   /* ---------------------------------------------------------------------- */
 
@@ -133,6 +153,17 @@ export const env = {
 
   get moderationConfigured(): boolean {
     return Boolean(this.moderationKey);
+  },
+
+  /**
+   * True when outbound Telegram delivery is fully configured.
+   *
+   * Deliberately NOT part of `describeCapabilities()`: that object is returned by
+   * the public /api/health route, and notification configuration is an internal
+   * operating detail rather than a public capability of the site.
+   */
+  get notifyConfigured(): boolean {
+    return Boolean(this.telegramBotToken && this.telegramChatId);
   },
 
   /**
