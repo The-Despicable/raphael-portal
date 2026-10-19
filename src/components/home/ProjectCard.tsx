@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ExternalLink, Lock, ShieldCheck, GitFork } from "lucide-react";
+import { ExternalLink, Lock, ShieldCheck, GitFork, ArrowRight } from "lucide-react";
 import type { ProjectCard as ProjectCardType } from "@/config/site";
 import { ToneChip } from "@/components/ui/primitives";
 
@@ -50,6 +50,7 @@ export function ProjectCard({
   const role = ROLE_META[project.role];
   const hasVerifiedLink = project.linkStatus === "verified" && Boolean(project.repositoryUrl);
   const hasDocsLink = project.linkStatus === "verified" && Boolean(project.docsUrl);
+  const hasInternalLink = Boolean(project.internalPath) && Boolean(project.internalLinkLabel);
 
   return (
     <article
@@ -141,6 +142,22 @@ export function ProjectCard({
             Documentation
             <ExternalLink size={12} aria-hidden />
           </a>
+        ) : null}
+
+        {/* Internal site route. Renders as a real client-side navigation, with no
+            external-link affordance, because it does not leave the site. Gated on
+            the field's presence rather than on linkStatus: an internal page of
+            this site is not a published external artifact, so withholding the
+            repository link must not hide it. */}
+        {hasInternalLink ? (
+          <Link
+            href={project.internalPath!}
+            aria-label={`${project.internalLinkLabel} for ${project.name}`}
+            className="inline-flex items-center gap-1.5 rounded text-[13px] font-medium text-cyan underline-offset-4 transition-opacity hover:opacity-80 hover:underline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-cyan"
+          >
+            {project.internalLinkLabel}
+            <ArrowRight size={12} aria-hidden />
+          </Link>
         ) : null}
       </div>
 

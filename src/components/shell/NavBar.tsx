@@ -39,8 +39,32 @@ export function NavBar() {
     return () => window.removeEventListener("keydown", onKey);
   }, [open]);
 
-  const isActive = (href: string) =>
-    href === "/" ? pathname === "/" : pathname.startsWith(href);
+  /**
+   * Active-route matching.
+   *
+   * `pathname.startsWith(href)` alone is wrong once a nested route exists:
+   * "/raphael/architecture" starts with "/raphael", so both the parent and the
+   * child nav item would report active at once. That would mark two items as the
+   * current page and would animate the shared `layoutId="nav-active"` bar between
+   * two elements in the same commit.
+   *
+   * The rule is therefore: an item is active only if it is the LONGEST nav href
+   * that the pathname matches. "/raphael/architecture" matches both hrefs and
+   * resolves to the longer one; "/raphael" matches only itself.
+   */
+  const isActive = (href: string) => {
+    if (href === "/") return pathname === "/";
+    if (pathname !== href && !pathname.startsWith(`${href}/`)) return false;
+
+    // This href matches. Is there a longer nav href that also matches?
+    const moreSpecific = navItems.some(
+      (other) =>
+        other.href !== href &&
+        other.href.length > href.length &&
+        (pathname === other.href || pathname.startsWith(`${other.href}/`)),
+    );
+    return !moreSpecific;
+  };
 
   return (
     <header

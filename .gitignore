@@ -140,3 +140,4 @@ scratch/
 .playwright/
 test-results/
 playwright-report/
+.env*

@@ -133,6 +133,26 @@ export default function RaphaelPage() {
               sits inside this chain.
             </Note>
           </Reveal>
+
+          <Reveal>
+            <div className="mt-6 flex flex-wrap items-center gap-x-6 gap-y-3">
+              <Link
+                href="/raphael/architecture"
+                className="inline-flex items-center gap-2 text-[14px] font-medium text-cyan transition-opacity hover:opacity-80 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-cyan"
+              >
+                Open the architecture explorer <ArrowRight size={14} aria-hidden />
+              </Link>
+              <Link
+                href="/raphael/timeline"
+                className="inline-flex items-center gap-2 text-[14px] font-medium text-cyan transition-opacity hover:opacity-80 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-cyan"
+              >
+                See the evolution timeline <ArrowRight size={14} aria-hidden />
+              </Link>
+              <span className="text-[12.5px] text-ink-faint">
+                The documented current snapshot and the Blueprint v4.2 target, side by side.
+              </span>
+            </div>
+          </Reveal>
         </Container>
       </Section>
 

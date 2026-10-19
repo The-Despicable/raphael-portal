@@ -22,6 +22,7 @@ import {
 import { AmbientGlow, HeroItem, HeroStagger, Reveal, Stagger, StaggerItem } from "@/components/ui/motion";
 import { ProjectCard } from "@/components/home/ProjectCard";
 import { SummaryBar } from "@/components/status/SummaryBar";
+import { ArchitectureExplorerTrigger } from "@/components/architecture/ArchitectureExplorerTrigger";
 
 export const metadata: Metadata = {
   // Stated in full rather than relying on the layout's `title.template`: the
@@ -280,12 +281,7 @@ export default function HomePage() {
                 documented as the sole owner of system primitives, but that holds only within the
                 canonical import closure.
               </p>
-              <Link
-                href="/raphael#architecture"
-                className="mt-4 inline-flex items-center gap-2 text-[14px] font-medium text-cyan transition-opacity hover:opacity-80"
-              >
-                Open the interactive diagram <ArrowRight size={14} aria-hidden />
-              </Link>
+              <ArchitectureExplorerTrigger />
             </Reveal>
           </Container>
         </Section>

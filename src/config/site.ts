@@ -82,6 +82,19 @@ export interface ProjectCard {
   repositoryUrl: string | null;
   /** Secondary documentation/demo link, same rule as repositoryUrl. */
   docsUrl: string | null;
+  /**
+   * Optional INTERNAL site route for this project, e.g. an architecture
+   * explorer.
+   *
+   * Kept separate from `docsUrl` on purpose: `docsUrl` is an external
+   * destination that leaves the site, while this is a page of the site itself.
+   * Merging them would force the card to apply "opens in a new tab" and
+   * external-link semantics to a local route, and would make the destination's
+   * nature invisible in the data model.
+   */
+  internalPath: string | null;
+  /** Label for the internal link. Never implies a source-release affordance. */
+  internalLinkLabel: string | null;
   linkStatus: ProjectLinkStatus;
   /**
    * Rendered instead of a repository link whenever the link is withheld.
@@ -194,6 +207,16 @@ export const contactChannels: readonly ContactChannel[] = [
 export const navItems: readonly NavItem[] = [
   { href: "/", label: "Home", description: "Portfolio and project overview" },
   { href: "/raphael", label: "Raphael", description: "Goals and documented architecture" },
+  {
+    href: "/raphael/architecture",
+    label: "Architecture",
+    description: "Documented current state and Blueprint v4.2 target",
+  },
+  {
+    href: "/raphael/timeline",
+    label: "Timeline",
+    description: "Project history from Ultimate Skill to the v4.x present position",
+  },
   { href: "/research", label: "Research", description: "Papers and application mapping" },
   { href: "/status", label: "Project Status", description: "Current state, blockers, roadmap" },
   { href: "/community", label: "Contact", description: "Email, Telegram, Instagram and X" },
@@ -214,6 +237,12 @@ export const projects: readonly ProjectCard[] = [
     tech: ["Python", "Orchestration", "Policy engines", "Evidence graphs"],
     repositoryUrl: "https://github.com/The-Despicable/raphael-2.0-rbsv2r",
     docsUrl: null,
+    // Internal architecture explorer. This is a page OF this site, not an
+    // external destination and not a source-release affordance: it documents
+    // the recorded architecture and the proposed blueprint, and it deliberately
+    // introduces no download or release-gate language.
+    internalPath: "/raphael/architecture",
+    internalLinkLabel: "Architecture",
     // Published. The URL points at the owner's own repository and resolves, so the
     // status is "verified" rather than "pending_review". The residuals travel in
     // `caveat` and in releaseReadiness.outstanding: an open link must not be read
@@ -233,6 +262,8 @@ export const projects: readonly ProjectCard[] = [
     tech: ["Python", "Monotonic gates", "Claim ladders"],
     repositoryUrl: null,
     docsUrl: null,
+    internalPath: null,
+    internalLinkLabel: null,
     // Checked: no Vesper repository exists under the owner's GitHub account.
     // A URL is therefore absent because none was established, not because it is
     // being withheld. Recorded distinctly so the card cannot imply otherwise.
@@ -259,6 +290,8 @@ export const projects: readonly ProjectCard[] = [
     ],
     repositoryUrl: "https://github.com/The-Despicable/computer-control-mcp",
     docsUrl: null,
+    internalPath: null,
+    internalLinkLabel: null,
     linkStatus: "verified",
     availabilityNote: null,
     caveat:
@@ -274,6 +307,8 @@ export const projects: readonly ProjectCard[] = [
     tech: [],
     repositoryUrl: null,
     docsUrl: null,
+    internalPath: null,
+    internalLinkLabel: null,
     // Withheld on purpose — NOT an absent URL. Mirrors how Raphael's own card
     // distinguishes "we are not publishing this yet" from "we never found one".
     // Promoting this to a verified link requires the credential-history
