@@ -136,6 +136,72 @@ describe("the modal primitive", () => {
   });
 });
 
+describe("framing headers for the explorer asset", () => {
+  const cfg = JSON.parse(read("vercel.json")) as {
+    headers: { source: string; headers: { key: string; value: string }[] }[];
+  };
+  const siteWide = cfg.headers.find((h) => h.source === "/(.*)")!;
+  const explorer = cfg.headers.find(
+    (h) => h.source === "/raphael-architecture-explorer.html",
+  );
+
+  const valueOf = (
+    rule: { headers: { key: string; value: string }[] },
+    key: string,
+  ) => rule.headers.find((h) => h.key === key)?.value;
+
+  it("keeps site-wide clickjacking protection intact", () => {
+    expect(valueOf(siteWide, "X-Frame-Options")).toBe("DENY");
+    expect(valueOf(siteWide, "Content-Security-Policy")).toContain(
+      "frame-ancestors 'none'",
+    );
+  });
+
+  it("allows the explorer asset to be framed by this origin only", () => {
+    // Without this the iframe renders blank IN PRODUCTION ONLY: the site-wide
+    // DENY / frame-ancestors 'none' headers block framing, and there is no
+    // such header in local dev, so the bug is invisible until deployment.
+    expect(explorer).toBeDefined();
+    expect(valueOf(explorer!, "X-Frame-Options")).toBe("SAMEORIGIN");
+    expect(valueOf(explorer!, "Content-Security-Policy")).toContain(
+      "frame-ancestors 'self'",
+    );
+  });
+
+  it("never relaxes framing to allow or to any origin", () => {
+    expect(explorer).toBeDefined();
+    expect(valueOf(explorer!, "X-Frame-Options")).not.toMatch(/ALLOW-FROM/i);
+    expect(valueOf(explorer!, "Content-Security-Policy")).not.toContain("*");
+    expect(valueOf(explorer!, "Content-Security-Policy")).not.toContain("'unsafe-eval'");
+  });
+
+  it("scopes the exception to that one path and nothing else", () => {
+    const scoped = cfg.headers.filter(
+      (h) =>
+        h.headers.some(
+          (x) =>
+            (x.key === "X-Frame-Options" && x.value !== "DENY") ||
+            (x.key === "Content-Security-Policy" &&
+              x.value.includes("frame-ancestors 'self'")),
+        ),
+    );
+    expect(scoped.map((h) => h.source)).toEqual([
+      "/raphael-architecture-explorer.html",
+    ]);
+  });
+
+  it("keeps the remaining security headers on the explorer asset", () => {
+    const keys = explorer!.headers.map((h) => h.key);
+    expect(keys).toContain("Content-Security-Policy");
+    expect(valueOf(explorer!, "Content-Security-Policy")).toContain(
+      "default-src 'self'",
+    );
+    expect(valueOf(explorer!, "Content-Security-Policy")).toContain(
+      "object-src 'none'",
+    );
+  });
+});
+
 describe("homepage integration", () => {
   it("renders the trigger instead of a plain link", () => {
     const home = read(HOME);
