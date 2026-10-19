@@ -4,12 +4,39 @@ set -uo pipefail
 cd /home/yaser/raphael-portal
 PORT="${PORT:-4123}"
 
-# Kill anything already on the port.
+# True only for a `next start` server that this script's own pid file points
+# at. A `next dev` server is never a match, even though both are titled
+# "next-server" once running.
+is_own_server() {
+  local pid="${1:-}"
+  [ -n "$pid" ] || return 1
+  [ -r "/proc/$pid/cmdline" ] || return 1
+  tr '\0' ' ' < "/proc/$pid/cmdline" 2>/dev/null | grep -q 'next-server' || return 1
+  local ppid
+  ppid="$(ps -o ppid= -p "$pid" 2>/dev/null | tr -d ' ')"
+  if [ -n "$ppid" ] && [ -r "/proc/$ppid/cmdline" ]; then
+    if tr '\0' ' ' < "/proc/$ppid/cmdline" 2>/dev/null | grep -q 'next dev'; then
+      return 1
+    fi
+  fi
+  return 0
+}
+
+# Kill the server this script started, and only that one.
+#
+# The previous `pkill -f "next-server"` swept EVERY next-server on the machine,
+# including an unrelated `next dev`. That is not a harmless convenience:
+# killing a dev server's next-server child makes the dev server respawn it with
+# a NEW Turbopack sessionId, and Next's dev client responds to a changed
+# sessionId with `window.location.reload()` — so running this script while a
+# dev tab was open force-reloaded that tab for no visible reason.
 if [ -f /tmp/rph-visual.pid ]; then
-  kill "$(cat /tmp/rph-visual.pid)" 2>/dev/null || true
+  PID="$(cat /tmp/rph-visual.pid)"
+  if is_own_server "$PID"; then
+    kill "$PID" 2>/dev/null || true
+  fi
   rm -f /tmp/rph-visual.pid
 fi
-pkill -f "next-server" 2>/dev/null || true
 sleep 1
 
 # setsid detaches from the session so the server is not reaped when this

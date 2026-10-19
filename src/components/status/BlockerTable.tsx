@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { Fragment, useMemo, useState } from "react";
 import type { Blocker, Severity } from "@/lib/types";
 
 const SEVERITIES: Severity[] = ["P0", "P1", "P2", "P3"];
@@ -103,9 +103,24 @@ export function BlockerTable({ blockers }: { blockers: readonly Blocker[] }) {
             {filtered.map((b) => {
               const isOpen = expanded === b.id;
               return (
-                <>
+                /*
+                 * The key MUST sit on the outermost element this callback
+                 * returns. The callback returns a Fragment (a row plus an
+                 * optional expanded-detail row), and a Fragment cannot carry a
+                 * key via the `<>` shorthand — so the shorthand produced a
+                 * keyless child, React logged "Each child in a list should have
+                 * a unique key prop", and reconciliation fell back to
+                 * index-based matching. That made React tear down and rebuild
+                 * the row DOM on every re-render instead of updating it, which
+                 * is visible as the table flickering and resetting while it is
+                 * being filtered or expanded.
+                 *
+                 * `key={b.id}` on the inner <tr> could not fix this: keys are
+                 * read from the element the callback returns, not from its
+                 * children. Hence the explicit <Fragment key=...>.
+                 */
+                <Fragment key={b.id}>
                   <tr
-                    key={b.id}
                     className="cursor-pointer border-b border-hairline transition-colors hover:bg-elevated/40"
                     onClick={() => setExpanded(isOpen ? null : b.id)}
                   >
@@ -148,7 +163,7 @@ export function BlockerTable({ blockers }: { blockers: readonly Blocker[] }) {
                   </tr>
 
                   {isOpen ? (
-                    <tr key={`${b.id}-detail`} className="border-b border-hairline bg-abyss/40">
+                    <tr className="border-b border-hairline bg-abyss/40">
                       <td colSpan={5} className="px-4 py-5">
                         <div className="grid gap-5 md:grid-cols-2">
                           <div className="space-y-4">
@@ -199,7 +214,7 @@ export function BlockerTable({ blockers }: { blockers: readonly Blocker[] }) {
                       </td>
                     </tr>
                   ) : null}
-                </>
+                </Fragment>
               );
             })}
           </tbody>

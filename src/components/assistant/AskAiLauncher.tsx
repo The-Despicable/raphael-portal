@@ -1,7 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { motion, AnimatePresence, useReducedMotion } from "motion/react";
+import { motion, AnimatePresence } from "motion/react";
+import { useReducedMotionPreference } from "@/components/ui/reduced-motion";
 import type { AssistantAnswer, Citation } from "@/lib/types";
 
 /**
@@ -39,7 +40,6 @@ const STARTERS = [
   "What does AUTH-000 block?",
   "Is exec/ really the only entry point?",
   "What is the verification principle?",
-  "Is Dream-RSI actually related to Raphael?",
 ];
 
 export function AskAiLauncher() {
@@ -54,7 +54,7 @@ export function AskAiLauncher() {
   const listRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
-  const reduced = useReducedMotion() ?? false;
+  const reduced = useReducedMotionPreference();
 
   useEffect(() => {
     fetch("/api/assistant")

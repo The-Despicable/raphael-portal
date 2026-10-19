@@ -5,7 +5,7 @@ import {
   proposedArchitecture,
   verificationPrinciple,
 } from "@/content/architecture";
-import { researchPapers, dreamRsiFeature } from "@/content/research";
+import { researchPapers } from "@/content/research";
 import { ASSESSMENT, blockers, readinessScorecard } from "@/content/status";
 import type { AssistantAnswer, Citation, EvidenceLabel } from "@/lib/types";
 import { env } from "@/lib/env";
@@ -193,13 +193,6 @@ function buildCorpus(): Passage[] {
       "VERIFIED",
     );
   }
-  push(
-    "dream-rsi",
-    "Dream-RSI provenance note",
-    "Structural concern",
-    `${dreamRsiFeature.structuralConcern.summary}: ${dreamRsiFeature.structuralConcern.detail} Caveat: ${dreamRsiFeature.structuralConcern.caveat}`,
-    "DOCUMENTED",
-  );
 
   return out;
 }
@@ -368,7 +361,7 @@ export function answerFromCorpus(question: string): AssistantAnswer {
         "",
         "The corpus is limited to the project's public-facing documentation. This assistant does not search the internet, the repository, or any private material, and it will not speculate to fill the gap.",
         "",
-        "Try asking about: the canonical architecture chain, a specific blocker such as AUTH-000 or EVAL-001, the readiness scorecard, the verification principle, or the Dream-RSI provenance question.",
+        "Try asking about: the canonical architecture chain, a specific blocker such as AUTH-000 or EVAL-001, the readiness scorecard, or the verification principle.",
       ].join("\n"),
       citations: [],
       notice: env.generativeAiConfigured

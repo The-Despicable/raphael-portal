@@ -10,7 +10,8 @@ import {
   type TrustRole,
   legendEntryFor,
 } from "@/content/raphael-architecture";
-import { motion, useReducedMotion } from "motion/react";
+import { motion } from "motion/react";
+import { useReducedMotionPreference } from "@/components/ui/reduced-motion";
 import { EvidenceTag } from "@/components/ui/primitives";
 
 /**
@@ -108,8 +109,22 @@ const BAND_STYLES: Record<ArchitectureBand["emphasis"], string> = {
 
 /** A connector label describing the relationship between two nodes. */
 function Connector({ label, legacy }: { label: string; legacy: boolean }) {
+  /*
+   * This is a DIV, not an <li>.
+   *
+   * The connector is rendered inside the band item's own <li>, so an <li>
+   * here produced `<li> inside <li>`, which is invalid HTML. React rejects it
+   * during hydration: "In HTML, <li> cannot be a descendant of <li>. This
+   * will cause a hydration error." The server and client then disagree about
+   * the element tree and React has to repair it.
+   *
+   * A <div> is valid inside an <li>, and it keeps <ol>'s direct children
+   * exclusively <li> elements, so the ordered list still counts only the real
+   * components. The connector is aria-hidden decoration, so it is not a list
+   * item by any reading.
+   */
   return (
-    <li
+    <div
       aria-hidden
       className="flex items-center justify-center gap-2 py-1 sm:py-0 sm:pl-1 sm:pr-1"
     >
@@ -134,7 +149,7 @@ function Connector({ label, legacy }: { label: string; legacy: boolean }) {
             : "bg-hairline-strong"
         }`}
       />
-    </li>
+    </div>
   );
 }
 
@@ -253,7 +268,7 @@ function Inspector({
   component: ArchitectureComponent;
   onClose: () => void;
 }) {
-  const reduced = useReducedMotion() ?? false;
+  const reduced = useReducedMotionPreference();
   const legend = legendEntryFor(component.status);
 
   return (
@@ -261,7 +276,7 @@ function Inspector({
       key={component.id}
       initial={reduced ? false : { opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.24, ease: [0.22, 1, 0.36, 1] }}
+      transition={{ duration: reduced ? 0 : 0.24, ease: [0.22, 1, 0.36, 1] }}
       aria-live="polite"
       className="surface p-5"
     >

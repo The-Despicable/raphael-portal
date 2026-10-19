@@ -1,6 +1,7 @@
 "use client";
 
-import { motion, useReducedMotion, type Variants } from "motion/react";
+import { motion, type Variants } from "motion/react";
+import { useReducedMotionPreference } from "@/components/ui/reduced-motion";
 import type { ReactNode } from "react";
 
 /**
@@ -52,7 +53,7 @@ export function Reveal({
   className?: string;
   as?: "div" | "section" | "li" | "article";
 }) {
-  const reduced = useReducedMotion() ?? false;
+  const reduced = useReducedMotionPreference();
   const variants = useVariants(dir, reduced);
   const Comp = motion[as];
 
@@ -82,10 +83,15 @@ export function HeroStagger({
   children: ReactNode;
   className?: string;
 }) {
-  const reduced = useReducedMotion() ?? false;
+  const reduced = useReducedMotionPreference();
 
-  if (reduced) return <div className={className}>{children}</div>;
-
+  /*
+   * The element type must NOT change with the reduced-motion preference.
+   * Returning a plain <div> for one branch and <motion.div> for the other
+   * makes React unmount and remount the subtree, which discards state and
+   * destroys any shared-layout projection (`layoutId`) that was in flight.
+   * The preference is expressed through the variants instead.
+   */
   return (
     <motion.div
       className={className}
@@ -93,7 +99,12 @@ export function HeroStagger({
       animate="visible"
       variants={{
         hidden: {},
-        visible: { transition: { staggerChildren: 0.09, delayChildren: 0.05 } },
+        visible: {
+          transition: {
+            staggerChildren: reduced ? 0 : 0.09,
+            delayChildren: reduced ? 0 : 0.05,
+          },
+        },
       }}
     >
       {children}
@@ -110,8 +121,7 @@ export function HeroItem({
   dir?: "up" | "left" | "right";
   className?: string;
 }) {
-  const reduced = useReducedMotion() ?? false;
-  if (reduced) return <div className={className}>{children}</div>;
+  const reduced = useReducedMotionPreference();
 
   const initial =
     dir === "left" ? { opacity: 0, x: -20 } : dir === "right" ? { opacity: 0, x: 20 } : { opacity: 0, y: 16 };
@@ -121,7 +131,7 @@ export function HeroItem({
       className={className}
       initial={initial}
       animate={{ opacity: 1, x: 0, y: 0 }}
-      transition={{ duration: 0.6, ease: EASE }}
+      transition={{ duration: reduced ? 0 : 0.6, ease: EASE }}
     >
       {children}
     </motion.div>
@@ -138,10 +148,9 @@ export function Stagger({
   className?: string;
   delay?: number;
 }) {
-  const reduced = useReducedMotion() ?? false;
+  const reduced = useReducedMotionPreference();
 
-  if (reduced) return <div className={className}>{children}</div>;
-
+  // See HeroStagger: the element type must not vary with the preference.
   return (
     <motion.div
       className={className}
@@ -150,7 +159,12 @@ export function Stagger({
       viewport={{ once: true, amount: 0.15 }}
       variants={{
         hidden: {},
-        visible: { transition: { staggerChildren: 0.07, delayChildren: delay } },
+        visible: {
+          transition: {
+            staggerChildren: reduced ? 0 : 0.07,
+            delayChildren: reduced ? 0 : delay,
+          },
+        },
       }}
     >
       {children}
@@ -165,15 +179,19 @@ export function StaggerItem({
   children: ReactNode;
   className?: string;
 }) {
-  const reduced = useReducedMotion() ?? false;
-  if (reduced) return <div className={className}>{children}</div>;
+  const reduced = useReducedMotionPreference();
 
+  // See HeroStagger: the element type must not vary with the preference.
   return (
     <motion.div
       className={className}
       variants={{
         hidden: { opacity: 0, y: 14 },
-        visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: EASE } },
+        visible: {
+          opacity: 1,
+          y: 0,
+          transition: { duration: reduced ? 0 : 0.5, ease: EASE },
+        },
       }}
     >
       {children}
@@ -197,17 +215,19 @@ export function Expand({
   children: ReactNode;
   className?: string;
 }) {
-  const reduced = useReducedMotion() ?? false;
+  const reduced = useReducedMotionPreference();
 
-  if (reduced) {
-    return open ? <div className={className}>{children}</div> : null;
-  }
-
+  /*
+   * The element type must not vary with the preference: swapping <div> for
+   * <motion.div> (or for null) remounts the region, which discards focus and
+   * any state inside it. Reduced motion is expressed as a zero-length
+   * transition instead, so the region still opens and closes, just instantly.
+   */
   return (
     <motion.div
       initial={false}
       animate={{ height: open ? "auto" : 0, opacity: open ? 1 : 0 }}
-      transition={{ duration: 0.32, ease: EASE }}
+      transition={{ duration: reduced ? 0 : 0.32, ease: EASE }}
       style={{ overflow: "hidden" }}
       className={className}
       aria-hidden={!open}
@@ -219,7 +239,7 @@ export function Expand({
 
 /** Static, low-opacity ambient glow. No motion when reduced. */
 export function AmbientGlow({ className = "" }: { className?: string }) {
-  const reduced = useReducedMotion() ?? false;
+  const reduced = useReducedMotionPreference();
   return (
     <div
       aria-hidden

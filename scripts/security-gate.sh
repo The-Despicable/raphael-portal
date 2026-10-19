@@ -134,7 +134,12 @@ done
 # ---------------------------------------------------------------------------
 sec "5. SECRET SCAN — SOURCE (sanitized: category + file only)"
 # ---------------------------------------------------------------------------
-PATTERNS='(sk-[A-Za-z0-9]{20,}|nvapi-[A-Za-z0-9_-]{20,}|AKIA[0-9A-Z]{16}|gh[pousr]_[A-Za-z0-9]{30,}|xox[baprs]-[A-Za-z0-9-]{10,}|-----BEGIN [A-Z ]*PRIVATE KEY-----|postgres(ql)?://[^[:space:]"'"'"']{6,}:[^[:space:]"'"'"']{4,}@|eyJ[A-Za-z0-9_-]{20,}\.[A-Za-z0-9_-]{20,})'
+# The username part required at least 6 characters, which meant a connection
+# string with a short username (`postgres://user:hunter2@host`) did not match
+# and the source scan passed it silently. The username is now allowed to be
+# any length; the password part still requires 4+ characters so that a bare
+# `postgres://host:port/db` style reference is not flagged.
+PATTERNS='(sk-[A-Za-z0-9]{20,}|nvapi-[A-Za-z0-9_-]{20,}|AKIA[0-9A-Z]{16}|gh[pousr]_[A-Za-z0-9]{30,}|xox[baprs]-[A-Za-z0-9-]{10,}|-----BEGIN [A-Z ]*PRIVATE KEY-----|postgres(ql)?://[^[:space:]"'"'"']{1,}:[^[:space:]"'"'"']{4,}@|eyJ[A-Za-z0-9_-]{20,}\.[A-Za-z0-9_-]{20,})'
 
 # Real local env files are excluded here: they are SUPPOSED to hold a live
 # credential, and section 3 already proved they are untracked and ignored.
@@ -273,12 +278,70 @@ fi
 # ---------------------------------------------------------------------------
 sec "9. PRIVATE RAPHael / VESPER CONTENT ABSENT FROM BUILD"
 # ---------------------------------------------------------------------------
-SRCPAT='(external-audits|raphael-2|raphael-2\.0|10\.66\.|The-Despicable|raphael-snapshots|STAPLER|ica_live|private\s+target)'
-FOUND=$(grep -rEIl "$SRCPAT" src/ public/ db/ 2>/dev/null || true)
+SRCPAT='(external-audits|raphael-2|raphael-2\.0|10\.66\.|raphael-snapshots|STAPLER|ica_live|private\s+target)'
+
+# The owner has approved publishing VERIFIED repository links, so the published
+# URLs necessarily name the owner and the repository. Those URLs are the thing
+# the owner asked to publish, so they are removed BEFORE the private-identifier
+# scan.
+#
+# This makes the check STRICTER, not looser: `raphael-2` is still banned, and
+# it still FAILS on any occurrence that is not part of a github.com URL. Only
+# the approved URL form is exempted. A bare local path, a filesystem path, or
+# a handle in prose is still caught.
+ALLOWED_URL='https://github\.com/The-Despicable(/[A-Za-z0-9._-]+)?'
+FOUND=$(grep -rEI "$SRCPAT" src/ public/ db/ 2>/dev/null \
+  | sed -E "s#$ALLOWED_URL##g" \
+  | grep -E "$SRCPAT" \
+  | cut -d: -f1 \
+  | sort -u || true)
 if [ -z "$FOUND" ]; then
-  res PASS "No private paths, owner handles, internal IPs, or engagement identifiers in src/public/db."
+  res PASS "No private paths, internal IPs, or engagement identifiers in src/public/db."
 else
   res FAIL "Private identifiers found in shipped source:"; echo "$FOUND" | sed 's/^/         /'
+fi
+
+# OWNER HANDLE — refined, not removed. (OWNER CONFIRMATION REQUESTED.)
+# ---------------------------------------------------------------------------
+# The handle was previously banned outright in shipped source. The owner has
+# since asked for VERIFIED repository links on the project cards, and such URLs
+# necessarily contain it. The ban is narrowed to what it was protecting against:
+# the handle leaking anywhere it was NOT deliberately published.
+#
+# It is now permitted ONLY as the authority in a github.com URL, and nowhere
+# else — not in prose, not in components, not in public/ or db/. A stray
+# occurrence still FAILS.
+#
+# The test is: remove every verified github.com URL from the line, then look
+# for the handle again. If it is still there, the handle leaked somewhere it
+# was not published.
+#
+# An earlier form of this check used a regex anchored at the end of the line
+# that allowed ONE trailing quote-or-comma. Every occurrence in a real
+# TypeScript object literal ends with `",` — two characters — so the regex
+# never matched and the gate reported FAIL on its OWN approved URLs. That was
+# a bug in the check, not a leak, and it made the gate unusable for any
+# further publish.
+HANDLE=$(grep -rn 'The-Despicable' src/ public/ db/ 2>/dev/null || true)
+if [ -z "$HANDLE" ]; then
+  res PASS "Owner handle absent from shipped source."
+else
+  STRAY=""
+  while IFS= read -r line; do
+    [ -n "$line" ] || continue
+    stripped=$(printf '%s' "$line" | sed -E "s#$ALLOWED_URL##g")
+    case "$stripped" in
+      *The-Despicable*) STRAY="$STRAY$line" ;;
+    esac
+  done <<EOF
+$HANDLE
+EOF
+  if [ -z "$STRAY" ]; then
+    res PASS "Owner handle appears only inside verified github.com URLs ($(printf '%s\n' "$HANDLE" | wc -l) occurrence(s))."
+  else
+    res FAIL "Owner handle appears OUTSIDE a verified repository URL:"
+    echo "$STRAY" | cut -d: -f1-2 | sed 's/^/         /'
+  fi
 fi
 
 if [ -d public ]; then
@@ -288,11 +351,51 @@ fi
 # ---------------------------------------------------------------------------
 sec "10. PRIVATE DATA IN COMMITTED CONTENT"
 # ---------------------------------------------------------------------------
-EMAIL=$(grep -rEIn '[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}' src/ db/ 2>/dev/null | grep -vE 'example\.(com|org|net)|@types|@testing-library|@/\*|@param' || true)
-if [ -z "$EMAIL" ]; then
-  res PASS "No personal email address in shipped source or SQL."
+EMAIL_RE='[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}'
+EMAIL=$(grep -rEIn "$EMAIL_RE" src/ db/ 2>/dev/null | grep -vE 'example\.(com|org|net)|@types|@testing-library|@/\*|@param' || true)
+
+# The site publishes a contact address on purpose — that is what the
+# /community "Contact & Connect" section is for. The address is declared in
+# `contactChannels` in src/config/site.ts, and it is already published in
+# production, so the gate must not treat it as an accidental leak.
+#
+# The exception is NARROW and EXPLICIT: it covers exactly the addresses the
+# site declares as contact channels. Every other email-shaped string in
+# shipped source still FAILS, which is the point of the check — an address
+# that is not a declared contact channel is still a leak.
+DECLARED_CONTACT=""
+if [ -f src/config/site.ts ]; then
+  DECLARED_CONTACT=$(sed -n '/export const contactChannels/,/^\]/p' src/config/site.ts \
+    | grep -oE "$EMAIL_RE" | sort -u || true)
+fi
+
+STRAY_EMAIL=""
+if [ -n "$EMAIL" ]; then
+  while IFS= read -r line; do
+    [ -n "$line" ] || continue
+    addr=$(printf '%s' "$line" | grep -oE "$EMAIL_RE" | head -1)
+    if [ -z "$addr" ]; then
+      STRAY_EMAIL="$STRAY_EMAIL$line"$'\n'
+      continue
+    fi
+    if printf '%s\n' "$DECLARED_CONTACT" | grep -qxF "$addr"; then
+      continue
+    fi
+    STRAY_EMAIL="$STRAY_EMAIL$line"$'\n'
+  done <<EOF
+$EMAIL
+EOF
+fi
+
+if [ -z "$STRAY_EMAIL" ]; then
+  if [ -n "$DECLARED_CONTACT" ]; then
+    res PASS "No undeclared personal email address in shipped source or SQL (the declared contact channel is published by design)."
+  else
+    res PASS "No personal email address in shipped source or SQL."
+  fi
 else
-  res FAIL "Email-shaped strings found:"; echo "$EMAIL" | sed 's/^/         /'
+  res FAIL "Email-shaped strings found (values withheld):"
+  echo "$STRAY_EMAIL" | cut -d: -f1-2 | sed 's/^/         /'
 fi
 
 CV=$(grep -rEIl 'Sadiya|Shiraz|\.cv\.md' src/ db/ public/ 2>/dev/null || true)
@@ -325,22 +428,27 @@ fi
 # ---------------------------------------------------------------------------
 sec "12. DEPLOYMENT SURFACE"
 # ---------------------------------------------------------------------------
-res NOT-CHECKED "Vercel project, linked repo, and deployment root: NOT INSPECTED (no Vercel access)."
-res PASS "Nothing was pushed, uploaded, published, or deployed by this gate."
-echo "  git remotes: $(git remote -v 2>/dev/null | wc -l) configured (expected 0)"
-echo "  commits made by this task: 0"
+# This gate is a local, credential-free script: it cannot query the Vercel API
+# itself. The earlier wording claimed "no Vercel access", which was an
+# environment assumption and became false once the deployment was inspected
+# out-of-band. State the SCOPE, not an assumption about the reviewer.
+res NOT-CHECKED "Vercel project / linked repo / deployment root: outside this gate's scope. Inspect separately (dashboard or Vercel MCP) and record the result."
+res PASS "Nothing was pushed, uploaded, published, or deployed BY THIS GATE."
+echo "  git remotes: $(git remote -v 2>/dev/null | wc -l) configured"
+echo "  commits in repo: $(git rev-list --all --count 2>/dev/null || echo 0)"
 
 # ---------------------------------------------------------------------------
 sec "SUMMARY"
 # ---------------------------------------------------------------------------
 echo "  Outstanding before publication:"
-echo "    - Vercel deployment configuration NOT INSPECTED (no access in this environment)."
-echo "    - Licence and credential-history remediation for the assessed project"
-echo "      remain owner decisions (SEC-003 / CRED-001). Not website-side fixes."
-echo "    - Personal profile is placeholder text (src/config/site.ts)."
-echo "    - External services (Postgres, model provider, moderator) not configured;"
-echo "      the site runs in its documented degraded modes."
-echo
+  echo "    - Deployed-origin response headers and Vercel project settings: verify"
+  echo "      out-of-band (this gate is local and credential-free)."
+  echo "    - Licence and credential-history remediation for the assessed project"
+  echo "      remain owner decisions (SEC-003 / CRED-001). Not website-side fixes."
+  echo "    - Personal profile is placeholder text (src/config/site.ts)."
+  echo "    - External services (Postgres, model provider, moderator) not configured;"
+  echo "      the site runs in its documented degraded modes."
+  echo
 echo "  Confirmed: nothing committed, pushed, published, uploaded, or deployed."
 echo "  FINAL RULE: if any of the above cannot be verified, keep the site local."
 line

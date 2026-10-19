@@ -219,33 +219,6 @@ export const evidenceProvenance: readonly EvidenceProvenanceEntry[] = [
       "That rotation has since happened, or that the exposed values were never used. Values were not accessed and are not reproduced anywhere on this site.",
   },
   {
-    findingId: "DREAM-RSI-ADOPTION",
-    subject: "The recorded conceptual adoption of Dream-RSI into planning",
-    category: "canonical",
-    establishes:
-      "An integrity-checked roadmap records a deliberately narrow conceptual adoption of specific ideas into the exploration policy, and states that no code was copied and no dependency added.",
-    doesNotEstablish:
-      "That the method is implemented, validated or reproduced. Conceptual adoption into planning is not implementation, and no experiment is claimed.",
-  },
-  {
-    findingId: "DREAM-RSI-STRUCTURAL-CONCERN",
-    subject: "The recorded concern that the published replay is one-sided",
-    category: "unauthenticated_internal_note",
-    establishes:
-      "An internal note records a specific mechanism by which replay could reward spending less while remaining blind to discovering more. It is offered as a hypothesis to check.",
-    doesNotEstablish:
-      "A peer-reviewed critique or a verified property of the published artifact. This site has not re-derived the claim against the source, and the note is not integrity-authenticated.",
-  },
-  {
-    findingId: "AWESOME-RSI-ENTRY-COUNT",
-    subject: "The recorded entry count for the consulted reference index",
-    category: "unauthenticated_internal_note",
-    establishes:
-      "An internal note records the index at a stated entry count and records that Dream-RSI is not listed. The absence was checked directly against the published index; the count was not re-counted.",
-    doesNotEstablish:
-      "That the recorded count is current or independently verified, and it confers no influence, contribution or adopted concept on Raphael.",
-  },
-  {
     findingId: "SITE-TRANSCRIPTION",
     subject: "This site's own summary of all source material",
     category: "transcription",

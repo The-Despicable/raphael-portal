@@ -6,15 +6,9 @@ import type { ApplicationStatus, ComponentKey, Provenance, ResearchMapping, Rese
  * ============================================================================
  * READ THIS BEFORE TRUSTING THE ENTRY COUNT
  * ============================================================================
- * The accessible project records name exactly ONE external publication:
- * Dream-RSI. Everything else in this library is either
- *   (a) an internal research/architecture record documented in the corpus, or
- *   (b) a reference index that was consulted, clearly labelled as such.
- *
- * Dream-RSI is a SOURCE OF INSPIRATION: the master roadmap records a narrow,
- * deliberate adoption of concepts (section 19.3 and appendix B.2). That is
- * conceptual adoption — no code was copied and no dependency exists. It is NOT
- * a claim that Raphael implemented the paper or reproduced its results.
+ * Every entry in this library is an internal research/architecture record
+ * documented in the corpus. No external publication is presented here as a
+ * source of influence, or as something the project implemented.
  *
  * The project's own historical bibliography could NOT be established from the
  * accessible records. Rather than pad this page with plausible-looking
@@ -29,79 +23,14 @@ import type { ApplicationStatus, ComponentKey, Provenance, ResearchMapping, Rese
 
 export const bibliographyCompleteness = {
   status: "INCOMPLETE",
-  verifiedExternalPublications: 1,
+  verifiedExternalPublications: 0,
   statement:
-    "The accessible project records name exactly one external publication, Dream-RSI, which the roadmap records as a deliberately narrow source of inspiration. The historical bibliography of what influenced Raphael's development could not be established, and conceptual similarity or conceptual adoption is not evidence of historical influence or of implementation.",
+    "No external publication is presented in this library. The historical bibliography of what influenced Raphael's development could not be established from the accessible records, and conceptual similarity is not evidence of historical influence or of implementation.",
   implication:
     "Do not read an empty mapping as evidence that a technique was unused. Read it as evidence that the record is missing.",
 } as const;
 
 export const researchPapers: readonly ResearchPaper[] = [
-  {
-    id: "dream-rsi",
-    title: "Dream-RSI",
-    // Author names and ordering transcribed from the arXiv record's own
-    // publication metadata, which lists all 17. Recorded in full rather than
-    // abbreviated, so a reader can check the list against the source instead of
-    // trusting a shortened form that looks equally authoritative.
-    authors:
-      "Tong Zheng, Xidong Wu, Zheng Zhang, Zhankui He, Chaoyi Zhang, Benjamin Coleman, Ruoqiao Wei, Di Bai, Haolin Liu, Rui Liu, Xue Wang, Yue Zhuan, Wang-Cheng Kang, Renkai Xiang, Heng Huang, Xinwu Cheng, Yunsong Guo",
-    year: 2026,
-    venue: "arXiv preprint",
-    doi: null,
-    arxivId: "2609.14858",
-    officialUrl: "https://arxiv.org/abs/2609.14858",
-    publicationStatus: "PREPRINT",
-    researchQuestion:
-      "Whether an agent can be improved by having it re-experience its own historical discovery traces — reusing recorded exploration rather than generating fresh trials.",
-    keyFinding:
-      "Not established here. This site reports a structural concern recorded in the project's internal notes — that the replay is structurally one-sided — not the paper's own conclusions.",
-    themes: ["Recursive self-improvement", "Trace reuse", "Exploration policy"],
-    components: ["AGENT_SELF_IMPROVEMENT", "MEASUREMENT_EVALUATION"],
-    provenance: "SOURCE_OF_INSPIRATION",
-    applicationStatus: "REFERENCED_IN_DECISION",
-    whereApplied:
-      "Adopted as inspiration at the planning level, not as code. The master roadmap (section 19.3, 'Dream-RSI boundary adopted by Raphael') records a deliberately narrow adoption: improve the exploration policy rather than the protected agent/evaluator, reuse completed history as a replay world, evaluate candidate policies cheaply offline, and retain the accepted policy for a later round. No code was copied and no dependency exists.",
-    supportingEvidence:
-      "Adoption is recorded in the project roadmap (section 19.3, 'Dream-RSI boundary adopted by Raphael', and appendix B.2), which also lists what was explicitly NOT adopted: no copied code, no assumption that the Arena is already replay, no assumption that replay alone proves future improvement. That roadmap sits in an integrity-checked archive whose recorded audited baseline re-verifies exactly as it was recorded, so the adoption record is authenticated as a record. Separately, two supporting facts come only from unsourced internal notes — that the associated repository is empty, and Dream-RSI's absence from the public index — and they are not independently authenticated; the site's provenance record classifies them accordingly. Conceptual adoption is not implementation, and authenticating the record of adoption does not implement, validate or reproduce the paper's method.",
-    lastVerified: "2026-10-16",
-    reviewStatus: "REVIEWED",
-    featured: true,
-    // Presented in the secondary "Conceptual influences" section, not the primary
-    // card grid. It shaped planning — specifically the exploration policy — but no
-    // code was copied and no dependency was introduced, so a full-size research
-    // card would overstate it. The arXiv link is retained there.
-    displayTier: "CONCEPTUAL_INFLUENCE",
-  },
-  {
-    id: "awesome-rsi-index",
-    title: "awesome-rsi — a public index of recursive self-improvement research",
-    authors: null,
-    year: null,
-    venue: "GitHub curated list",
-    doi: null,
-    arxivId: null,
-    officialUrl: "https://github.com/lobehub/awesome-rsi",
-    publicationStatus: "UNKNOWN",
-    researchQuestion:
-      "Which published work concerns recursive self-improvement? Not itself a research contribution — a discovery aid.",
-    keyFinding:
-      "Not applicable. This entry is an index, listed so a reader can independently audit the Dream-RSI provenance claim rather than trusting this site.",
-    themes: ["Recursive self-improvement", "Survey", "Discovery aid"],
-    components: ["AGENT_SELF_IMPROVEMENT"],
-    provenance: "REFERENCE_INDEX_CONSULTED",
-    applicationStatus: "CONCEPTUALLY_RELATED",
-    whereApplied:
-      "Not applied, and no concept was adopted from it. Consulted as reference material while reading recursive-self-improvement literature, and used only to cross-check one recorded fact about the Dream-RSI entry.",
-    supportingEvidence:
-      "Project notes record this list at 226 entries with Dream-RSI not listed. Treat the entry count as recorded, not independently re-counted by this site. Being listed here as a reference index consulted is not a claim that it influenced anything.",
-    lastVerified: "2026-10-16",
-    reviewStatus: "REVIEWED",
-    // A discovery aid consulted only to cross-check one recorded fact about the
-    // Dream-RSI entry. Not an influence and not a source of an adopted concept,
-    // so it is kept as a compact provenance note rather than a research card.
-    displayTier: "RELATED_SOURCE",
-  },
 
   /* ------------------------------------------------------------------ */
   /* Internal research and architecture records — documented in corpus.   */
@@ -222,15 +151,6 @@ export const primaryResearchPapers: readonly ResearchPaper[] = researchPapers.fi
   (p) => (p.displayTier ?? "PRIMARY") === "PRIMARY",
 );
 
-/** External work that shaped planning without being implemented. */
-export const conceptualInfluences: readonly ResearchPaper[] = researchPapers.filter(
-  (p) => p.displayTier === "CONCEPTUAL_INFLUENCE",
-);
-
-/** References consulted to audit another entry. Not a source of any concept. */
-export const relatedSources: readonly ResearchPaper[] = researchPapers.filter(
-  (p) => p.displayTier === "RELATED_SOURCE",
-);
 
 export const provenanceMeta: Record<
   Provenance,
@@ -308,7 +228,7 @@ export const componentLabels: Record<ComponentKey, string> = {
  * The research-to-implementation matrix.
  *
  * Note the shape of this table: every row is either an INTERNAL project record
- * with a named artifact, or Dream-RSI with an explicit "not established".
+ * with a named artifact, or with an explicit "not established".
  * There is no row claiming an external paper was implemented, because the
  * accessible records do not support such a claim.
  */
@@ -345,69 +265,8 @@ export const researchMappings: readonly ResearchMapping[] = [
     evidence: "Accepted architecture decision; assessed as a genuine methodological asset.",
     status: "IMPLEMENTED_AND_DOCUMENTED",
   },
-  {
-    paperId: "dream-rsi",
-    coreIdea: "Reusing an agent's own historical discovery traces to drive further exploration.",
-    component: "AGENT_SELF_IMPROVEMENT",
-    // CORRECTED 2026-10-18. This row previously read "NOT APPLIED. No
-    // development record establishes that Raphael used this work" with status
-    // NOT_YET_INVESTIGATED, which contradicted researchPapers[dream-rsi]
-    // (SOURCE_OF_INSPIRATION / REFERENCED_IN_DECISION), the dreamRsiFeature
-    // block, and the roadmap record — and both renderings were visible on this
-    // page at once. The paper-level record is the correct one: concepts were
-    // adopted into planning, and no code was ever copied.
-    whereApplied:
-      "CONCEPTUALLY ADOPTED IN PLANNING, NOT IMPLEMENTED. The master roadmap (section 19.3 and appendix B.2) records a deliberately narrow adoption of specific ideas into the exploration policy. No code was copied and no dependency exists.",
-    evidence:
-      "Recorded adoption in the project roadmap, section 19.3 and appendix B.2, which also lists what was explicitly not adopted. The source is an arXiv preprint; no independent verification of its method, and none of any claimed adoption, was performed.",
-    status: "REFERENCED_IN_DECISION",
-  },
-  {
-    paperId: "awesome-rsi-index",
-    coreIdea: "A public index of recursive-self-improvement work, used here as an independent audit trail.",
-    component: "AGENT_SELF_IMPROVEMENT",
-    whereApplied: "Used only to cross-check one recorded fact about the Dream-RSI entry.",
-    evidence:
-      "Internal notes record the list at 226 entries with Dream-RSI absent. The absence was checked directly against the published index and confirmed. Treat the entry count as recorded, not independently re-counted by this site.",
-    status: "CONCEPTUALLY_RELATED",
-  },
 ];
 
-export const dreamRsiFeature = {
-  treatment: "SOURCE OF INSPIRATION / CONCEPTUALLY ADOPTED, NOT IMPLEMENTED",
-  headline:
-    "Dream-RSI is the one external publication the records name — adopted as inspiration at the planning level, never as code",
-  honestyNote:
-    "The master roadmap records a deliberately narrow adoption: the exploration policy became an explicit meta-level improvement target, and completed discovery history was adopted as a replay world. No code was copied and no dependency exists, so this is not a claim that Raphael implemented the paper or reproduced its findings.",
-  adoptedConcepts: [
-    "Improve the exploration policy, not the protected agent/evaluator.",
-    "Reuse completed history as a replay world.",
-    "Evaluate many candidate policies cheaply offline.",
-    "Retain the accepted policy for a later round.",
-  ],
-  notAdopted: [
-    "No code copied, and no dependency on the published artifact.",
-    "No assumption that Raphael's Arena already constitutes replay.",
-    "No assumption that replay alone proves future improvement.",
-    "No assumption that Raphael should make the full agent or evaluator self-modifiable.",
-  ],
-  structuralConcern: {
-    summary: "A one-sided replay, recorded in the project's internal notes",
-    detail:
-      "The notes record that the associated repository was empty with no code ever committed, and that the published replay is structurally one-sided: child selection returns the earliest-created child, and replay hard-caps the width and resource counters at the values recorded in the trace. On that description the replay can reward a policy for spending less while remaining largely blind to discovering more.",
-    caveat:
-      "This is a reading recorded in internal project notes, not a peer-reviewed critique, and this site has not independently re-derived it against the published artifact. It is offered as a hypothesis to check, which is the appropriate epistemic status for a concern about a preprint. Note that the roadmap's replay-as-world adoption and this one-sidedness concern are the same design decision seen from two sides.",
-  },
-  openDirections: [
-    "Reusing historical discovery traces — does trace reuse add information, or does it only re-weight what the trace already recorded?",
-    "Evaluating alternative exploration policies — can a replay distinguish a policy that found more from one that spent less?",
-    "Recursive improvement of agent behaviour — does the mechanism itself change, or only the data? The internal notes warn that varying data with a fixed mechanism populates a lower rung of the claim ladder than intended.",
-    "Independent validation of claimed improvement — who holds the seal on the held-out family? If the same lane both seals it and reports transfer to it, it controls its own measurement.",
-    "Avoiding self-evaluation bias and evidence contamination — can the evaluator be independent of the thing it evaluates?",
-  ],
-  note:
-    "Do not state that Raphael implemented Dream-RSI or reproduced its findings. Neither is supported by the accessible records. The accurate claim is narrower: specific concepts were adopted into planning.",
-} as const;
 
 /**
  * Open research questions for this library.
@@ -449,11 +308,5 @@ export const openResearchQuestions: readonly {
     question: "What evidence would justify adopting a particular paper's technique?",
     rationale:
       "Conceptual similarity is currently the weakest link between the literature and the implementation — which is why the mapping matrix has so many rows reading 'not established'.",
-  },
-  {
-    id: "RQ-6",
-    question: "Can a replay distinguish a policy that found more from one that spent less?",
-    rationale:
-      "Raised by the recorded concern about Dream-RSI's replay, and by the same shape appearing in the project's own selector evaluation. A replay that cannot tell those apart cannot support a recursive-improvement claim.",
   },
 ];

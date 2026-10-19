@@ -173,6 +173,33 @@ else
   bad "follow-up did not resolve to any record"
 fi
 if echo "$A" | grep -q 'Documented canonical architecture'; then ok "citations point at corpus documents"; else bad "no corpus citation"; fi
+
+# --- 9c. public response must not leak internal state ----------------------
+# Regression guard: the endpoint once attached raw provider text as `__raw`.
+# This asserts against a REAL HTTP response, not the source, so a runtime-only
+# leak would still be caught.
+LEAK=$(curl -fsS -X POST "${BASE}/api/assistant" -H 'Content-Type: application/json' \
+        -d '{"question":"What does AUTH-000 block?"}')
+if echo "$LEAK" | grep -qE '__raw|reasoning_content|Authorization|Bearer |nvapi-|apiKey|chat_template_kwargs'; then
+  bad "assistant response contains internal/provider data"
+else
+  ok "assistant response carries no raw output, headers, or credentials"
+fi
+
+KEYS=$(printf '%s' "$LEAK" | python3 -c 'import json,sys;print(",".join(sorted(json.load(sys.stdin).keys())))' 2>/dev/null)
+if [ "$KEYS" = "capabilities,citations,corpusSize,mode,notice,text" ]; then
+  ok "assistant response keys are exactly the allowlist"
+else
+  bad "unexpected response keys: ${KEYS}"
+fi
+
+# --- 9d. health must not disclose configuration values ---------------------
+H=$(curl -fsS "${BASE}/api/health")
+if echo "$H" | grep -qiE 'nvapi-|postgres://|sk-[A-Za-z0-9]{20,}|"secret"|"value"'; then
+  bad "health response discloses configuration values"
+else
+  ok "health response exposes status only, no configuration values"
+fi
 A2=$(curl -fsS -X POST "${BASE}/api/assistant" -H 'Content-Type: application/json' \
       -d '{"question":"What is the capital of France?"}')
 if echo "$A2" | grep -q '"mode":"GENERATIVE_UNGROUNDED"' \

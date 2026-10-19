@@ -78,13 +78,11 @@ describe("answerFromCorpus", () => {
   });
 
   it("does not invent a DOI or arXiv ID that is absent from the corpus", () => {
-    // The corpus records exactly one external identifier. An answer must not
-    // manufacture others.
+    // The corpus records no external identifier. An answer must not
+    // manufacture one, so any arXiv-shaped string is a fabrication.
     const answer = answerFromCorpus("Which papers did Raphael cite?");
     const identifiers = answer.text.match(/arXiv:\d{4}\.\d{4,5}/g) ?? [];
-    for (const id of identifiers) {
-      expect(id).toBe("arXiv:2609.14858");
-    }
+    expect(identifiers).toHaveLength(0);
   });
 
   it("keeps the documented/verified distinction in quoted passages", () => {

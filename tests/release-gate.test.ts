@@ -4,11 +4,7 @@ import { describe, expect, it } from "vitest";
 import { profile, projects, releaseReadiness } from "@/config/site";
 import {
   researchPapers,
-  primaryResearchPapers,
-  conceptualInfluences,
-  relatedSources,
   bibliographyCompleteness,
-  dreamRsiFeature,
   researchMappings,
 } from "@/content/research";
 import { blockers, ASSESSMENT, timeline, evidenceProvenance } from "@/content/status";
@@ -288,42 +284,20 @@ describe("research bibliography honesty", () => {
     expect(bibliographyCompleteness.status).toBe("INCOMPLETE");
   });
 
-  it("contains exactly one external publication", () => {
+  it("presents no external publication", () => {
+    // Nothing external is presented as a source of influence or as implemented.
+    // The declared count and the actual corpus must agree, so a future entry
+    // cannot be added without its classification being recorded honestly.
     const external = researchPapers.filter(
       (p) => p.publicationStatus === "PEER_REVIEWED" || p.publicationStatus === "PREPRINT",
     );
-    expect(external).toHaveLength(1);
-    expect(external[0].id).toBe("dream-rsi");
+    expect(external).toHaveLength(0);
+    expect(bibliographyCompleteness.verifiedExternalPublications).toBe(
+      external.length,
+    );
   });
 
-  it("classifies Dream-RSI as inspiration, not as a pending candidate", () => {
-    // The master roadmap (section 19.3, appendix B.2) records a narrow,
-    // deliberate conceptual adoption. The previous labels — CANDIDATE_SUCCESSOR
-    // and NOT_YET_INVESTIGATED — described something awaiting investigation,
-    // which misstated what the records actually say.
-    const dream = researchPapers.find((p) => p.id === "dream-rsi")!;
-    expect(dream.provenance).toBe("SOURCE_OF_INSPIRATION");
-    expect(dream.applicationStatus).toBe("REFERENCED_IN_DECISION");
-  });
 
-  it("still never claims Dream-RSI was implemented", () => {
-    // Reclassifying it as inspiration must NOT become a backdoor claim that the
-    // paper was used. The adoption is conceptual, and the copy has to say so.
-    const dream = researchPapers.find((p) => p.id === "dream-rsi")!;
-    expect(dream.applicationStatus).not.toBe("IMPLEMENTED_AND_DOCUMENTED");
-    expect(dream.whereApplied).toMatch(/not as code/i);
-    expect(dream.whereApplied).toMatch(/no code was copied|no dependency/i);
-    expect(dreamRsiFeature.note).toMatch(/do not state that raphael implemented/i);
-  });
-
-  it("does not present awesome-rsi as a source of inspiration", () => {
-    // awesome-rsi was only read to cross-check one recorded fact. It must not be
-    // given the same badge as Dream-RSI, which would overstate it.
-    const index = researchPapers.find((p) => p.id === "awesome-rsi-index")!;
-    expect(index.provenance).toBe("REFERENCE_INDEX_CONSULTED");
-    expect(index.applicationStatus).not.toBe("IMPLEMENTED_AND_DOCUMENTED");
-    expect(index.whereApplied).toMatch(/no concept was adopted/i);
-  });
 
   it("never asserts that an external paper was implemented", () => {
     for (const paper of researchPapers) {
@@ -334,54 +308,7 @@ describe("research bibliography honesty", () => {
     }
   });
 
-  it("places Dream-RSI in conceptual influences, not the primary card grid", () => {
-    // Editorial placement: a full-size research card would imply Dream-RSI is a
-    // record of the same kind as the project's internal entries. It influenced
-    // planning only, so it belongs in the secondary section.
-    expect(primaryResearchPapers.some((p) => p.id === "dream-rsi")).toBe(false);
-    expect(conceptualInfluences.map((p) => p.id)).toContain("dream-rsi");
-  });
 
-  it("retains the arXiv link for the Dream-RSI influence", () => {
-    const dream = conceptualInfluences.find((p) => p.id === "dream-rsi")!;
-    expect(dream.arxivId).toBe("2609.14858");
-    expect(dream.officialUrl).toBe("https://arxiv.org/abs/2609.14858");
-  });
-
-  it("keeps Dream-RSI framed as a planning influence, never as implementation", () => {
-    // Placement must not soften the honesty constraints from the checks above.
-    const dream = conceptualInfluences.find((p) => p.id === "dream-rsi")!;
-    expect(dream.provenance).toBe("SOURCE_OF_INSPIRATION");
-    expect(dream.applicationStatus).toBe("REFERENCED_IN_DECISION");
-    expect(dream.applicationStatus).not.toBe("IMPLEMENTED_AND_DOCUMENTED");
-    expect(dream.whereApplied).toMatch(/exploration policy/i);
-    expect(dream.whereApplied).toMatch(/no code was copied|no dependency/i);
-  });
-
-  it("keeps awesome-rsi out of the primary grid as a consulted reference only", () => {
-    // awesome-rsi was read to cross-check one recorded fact. A full card would
-    // present it as research of its own, which overstates its role.
-    expect(primaryResearchPapers.some((p) => p.id === "awesome-rsi-index")).toBe(false);
-    expect(relatedSources.map((p) => p.id)).toContain("awesome-rsi-index");
-    const index = relatedSources.find((p) => p.id === "awesome-rsi-index")!;
-    expect(index.provenance).toBe("REFERENCE_INDEX_CONSULTED");
-    expect(index.whereApplied).toMatch(/no concept was adopted/i);
-    expect(index.officialUrl).toBe("https://github.com/lobehub/awesome-rsi");
-  });
-
-  it("keeps the two secondary tiers disjoint from the primary grid", () => {
-    const primaryIds = new Set(primaryResearchPapers.map((p) => p.id));
-    for (const p of [...conceptualInfluences, ...relatedSources]) {
-      expect(primaryIds.has(p.id)).toBe(false);
-    }
-    // Nothing may be dropped: the tiers must partition the corpus exactly.
-    const tiered = [
-      ...primaryResearchPapers.map((p) => p.id),
-      ...conceptualInfluences.map((p) => p.id),
-      ...relatedSources.map((p) => p.id),
-    ].sort();
-    expect(tiered).toEqual(researchPapers.map((p) => p.id).sort());
-  });
 
   it("marks unawaited submissions as awaiting review rather than published", () => {
     for (const paper of researchPapers) {
@@ -483,10 +410,8 @@ describe("public claim accuracy", () => {
   const read = (p: string) => readFileSync(join(__dirname, "..", p), "utf8");
 
   it("never lets the mapping matrix contradict the paper it maps", () => {
-    // The matrix and the paper entry both render on /research. When they
-    // disagreed, the page simultaneously told the reader that Dream-RSI was
-    // "NOT APPLIED ... NOT YET INVESTIGATED" and that it was "adopted as
-    // inspiration at the planning level". Both statements rendered together.
+    // The matrix and the paper entry both render on /research, so a
+    // disagreement between them puts two incompatible statements on one page.
     for (const mapping of researchMappings) {
       const paper = researchPapers.find((p) => p.id === mapping.paperId);
       if (!paper) continue;
@@ -497,16 +422,6 @@ describe("public claim accuracy", () => {
     }
   });
 
-  it("keeps Dream-RSI recorded as inspiration, never as an implemented method", () => {
-    const paper = researchPapers.find((p) => p.id === "dream-rsi")!;
-    const mapping = researchMappings.find((m) => m.paperId === "dream-rsi")!;
-    expect(paper.provenance).toBe("SOURCE_OF_INSPIRATION");
-    expect(mapping.status).not.toBe("NOT_YET_INVESTIGATED");
-    expect(mapping.whereApplied).not.toMatch(/NOT APPLIED/i);
-    // The distinction is only meaningful if "implemented" stays off the table.
-    expect(mapping.whereApplied).not.toMatch(/implemented and verified/i);
-    expect(dreamRsiFeature.treatment).toMatch(/NOT IMPLEMENTED/);
-  });
 
   it("never renders a bare VERIFIED tag on the homepage", () => {
     // "Release readiness" sat above three unresolved blockers wearing a
@@ -621,14 +536,12 @@ describe("evidence provenance record", () => {
   });
 
   it("never marks an unauthenticated or transcribed finding as canonical", () => {
-    // These four have no authenticated artifact behind them. Promoting any of
+    // These two have no authenticated artifact behind them. Promoting either
     // them must be a deliberate, visible change — that is the whole point of
     // recording them separately instead of folding them into the assessment's
     // own authority.
     for (const id of [
       "EVAL-001-DRIFT",
-      "DREAM-RSI-STRUCTURAL-CONCERN",
-      "AWESOME-RSI-ENTRY-COUNT",
       "SITE-TRANSCRIPTION",
     ]) {
       expect(entry(id).category, `${id} must not be canonical`).not.toBe("canonical");
@@ -685,50 +598,3 @@ describe("evidence provenance record", () => {
   });
 });
 
-describe("Dream-RSI provenance", () => {
-  const dream = researchPapers.find((p) => p.id === "dream-rsi")!;
-  const index = researchPapers.find((p) => p.id === "awesome-rsi-index")!;
-
-  it("records the adoption as an authenticated roadmap entry", () => {
-    expect(dream.supportingEvidence).toMatch(/integrity-checked archive/i);
-    expect(dream.supportingEvidence).toMatch(/re-verifies exactly as it was recorded/i);
-  });
-
-  it("does not let authentication imply implementation", () => {
-    // The exact failure mode this guards: "the record is authentic" silently
-    // becoming "therefore the method is implemented."
-    expect(dream.supportingEvidence).toMatch(
-      /does not implement, validate or reproduce/i
-    );
-    expect(dream.whereApplied).toMatch(/No code was copied/i);
-    expect(dream.provenance).toBe("SOURCE_OF_INSPIRATION");
-    expect(dream.applicationStatus).toBe("REFERENCED_IN_DECISION");
-    expect(dream.applicationStatus).not.toBe("IMPLEMENTED_AND_DOCUMENTED");
-  });
-
-  it("keeps Awesome RSI a secondary cross-check with a qualified count", () => {
-    expect(index.provenance).toBe("REFERENCE_INDEX_CONSULTED");
-    expect(index.applicationStatus).toBe("CONCEPTUALLY_RELATED");
-    expect(index.whereApplied).toMatch(/no concept was adopted/i);
-    // The recorded count stays explicitly un-verified by this site.
-    expect(index.supportingEvidence).toMatch(/not independently re-counted/i);
-    expect(primaryResearchPapers.some((p) => p.id === "awesome-rsi-index")).toBe(
-      false
-    );
-  });
-
-  it("publishes the complete author list exactly as the source record gives it", () => {
-    // Transcribed from the arXiv publication metadata, which lists all 17.
-    // An abbreviated form would look equally authoritative while being
-    // unverifiable, so the full list is asserted verbatim.
-    expect(dream.authors).toBe(
-      "Tong Zheng, Xidong Wu, Zheng Zhang, Zhankui He, Chaoyi Zhang, Benjamin Coleman, Ruoqiao Wei, Di Bai, Haolin Liu, Rui Liu, Xue Wang, Yue Zhuan, Wang-Cheng Kang, Renkai Xiang, Heng Huang, Xinwu Cheng, Yunsong Guo"
-    );
-    const names = dream.authors!.split(",").map((s) => s.trim());
-    expect(names).toHaveLength(17);
-    expect(new Set(names).size).toBe(17);
-    expect(names[0]).toBe("Tong Zheng");
-    expect(names[16]).toBe("Yunsong Guo");
-    expect(dream.authors).not.toMatch(/et al/i);
-  });
-});

@@ -3,7 +3,8 @@
 import { useState } from "react";
 import type { ArchNode } from "@/lib/types";
 import { EvidenceTag } from "@/components/ui/primitives";
-import { motion, useReducedMotion } from "motion/react";
+import { motion } from "motion/react";
+import { useReducedMotionPreference } from "@/components/ui/reduced-motion";
 
 /**
  * Interactive architecture diagram.
@@ -39,7 +40,7 @@ export function ArchitectureDiagram({
   edges: readonly { from: string; to: string; label: string }[];
 }) {
   const [activeId, setActiveId] = useState<string | null>(null);
-  const reduced = useReducedMotion() ?? false;
+  const reduced = useReducedMotionPreference();
 
   const active = nodes.find((n) => n.id === activeId) ?? null;
   const activeIndex = active ? nodes.findIndex((n) => n.id === active.id) : -1;

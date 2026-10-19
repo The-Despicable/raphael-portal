@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import { motion, AnimatePresence, useReducedMotion } from "motion/react";
+import { motion, AnimatePresence } from "motion/react";
+import { useReducedMotionPreference } from "@/components/ui/reduced-motion";
 import { navItems, releaseReadiness } from "@/config/site";
 import { Container } from "@/components/ui/primitives";
 
@@ -21,7 +22,7 @@ export function NavBar() {
   const pathname = usePathname();
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
-  const reduced = useReducedMotion() ?? false;
+  const reduced = useReducedMotionPreference();
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 12);
@@ -107,15 +108,19 @@ export function NavBar() {
                   >
                     {item.label}
                     {active ? (
-                      reduced ? (
-                        <span className="absolute inset-x-3.5 -bottom-px h-px bg-cyan" />
-                      ) : (
-                        <motion.span
-                          layoutId="nav-active"
-                          className="absolute inset-x-3.5 -bottom-px h-px bg-cyan"
-                          transition={{ duration: 0.32, ease: [0.22, 1, 0.36, 1] }}
-                        />
-                      )
+                      /*
+                       * The element type must not vary with the reduced-motion
+                       * preference. Swapping <span> for <motion.span> after
+                       * mount unmounts the shared-layout node that `layoutId`
+                       * projects onto, which makes the active-route bar jump
+                       * or fail to animate. A zero-length transition gives
+                       * the same "instant" result without the remount.
+                       */
+                      <motion.span
+                        layoutId="nav-active"
+                        className="absolute inset-x-3.5 -bottom-px h-px bg-cyan"
+                        transition={{ duration: reduced ? 0 : 0.32, ease: [0.22, 1, 0.36, 1] }}
+                      />
                     ) : null}
                   </Link>
                 </li>
@@ -175,7 +180,7 @@ export function NavBar() {
             initial={reduced ? false : { height: 0, opacity: 0 }}
             animate={{ height: "auto", opacity: 1 }}
             exit={reduced ? undefined : { height: 0, opacity: 0 }}
-            transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
+            transition={{ duration: reduced ? 0 : 0.28, ease: [0.22, 1, 0.36, 1] }}
             className="overflow-hidden border-t border-hairline bg-void/95 backdrop-blur-xl lg:hidden"
           >
             <Container>
