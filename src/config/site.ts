@@ -217,6 +217,7 @@ export const navItems: readonly NavItem[] = [
     label: "Timeline",
     description: "Project history from Ultimate Skill to the v4.x present position",
   },
+  { href: "/raphael/frozen", label: "Freeze Status", description: "Frozen runtime state, native fallback, cutover triggers" },
   { href: "/research", label: "Research", description: "Papers and application mapping" },
   { href: "/status", label: "Project Status", description: "Current state, blockers, roadmap" },
   { href: "/community", label: "Contact", description: "Email, Telegram, Instagram and X" },

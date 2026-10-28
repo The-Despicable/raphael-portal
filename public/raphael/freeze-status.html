@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>RAPHAEL // Red Team Freeze Status</title>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          "colors": {
+            "inverse-surface": "#f6fafb",
+            "surface-container-low": "#0e1416",
+            "surface-container": "#141b1c",
+            "on-primary-fixed-variant": "#005561",
+            "inverse-on-surface": "#515657",
+            "primary-container": "#00cbe6",
+            "surface-dim": "#0a0f10",
+            "secondary": "#cebdff",
+            "on-primary-fixed": "#00363e",
+            "on-secondary-fixed": "#472894",
+            "primary-fixed-dim": "#1ad0eb",
+            "primary": "#2fd9f4",
+            "tertiary-dim": "#5ba0f5",
+            "error-dim": "#c54d4a",
+            "on-error-container": "#ff9993",
+            "secondary-fixed-dim": "#dbcdff",
+            "error-container": "#871f21",
+            "on-secondary-fixed-variant": "#6448b2",
+            "tertiary-fixed": "#64a8fe",
+            "surface": "#0a0f10",
+            "on-surface-variant": "#a3adaf",
+            "inverse-primary": "#006977",
+            "surface-tint": "#2fd9f4",
+            "secondary-fixed": "#e8ddff",
+            "on-tertiary-container": "#00284e",
+            "on-secondary": "#482995",
+            "surface-bright": "#242e30",
+            "on-surface": "#dde7ea",
+            "primary-fixed": "#3adffa",
+            "on-primary": "#004752",
+            "outline-variant": "#404a4c",
+            "primary-dim": "#00cbe6",
+            "on-tertiary-fixed": "#000613",
+            "on-tertiary": "#003361",
+            "background": "#0a0f10",
+            "tertiary": "#7fb6ff",
+            "on-tertiary-fixed-variant": "#00315d",
+            "tertiary-fixed-dim": "#559bef",
+            "surface-variant": "#1e272a",
+            "error": "#fa746f",
+            "on-error": "#490006",
+            "surface-container-highest": "#1e272a",
+            "secondary-container": "#432390",
+            "outline": "#6d777a",
+            "on-primary-container": "#003d46",
+            "tertiary-container": "#64a8fe",
+            "surface-container-lowest": "#000000",
+            "on-secondary-container": "#c7b4ff",
+            "surface-container-high": "#192123",
+            "on-background": "#dde7ea",
+            "secondary-dim": "#a88cfb"
+          },
+          "borderRadius": {
+            "DEFAULT": "0.25rem",
+            "lg": "0.5rem",
+            "xl": "0.75rem",
+            "full": "9999px"
+          },
+          "spacing": {
+            "space-xs": "0.25rem",
+            "space-xl": "2rem",
+            "space-sm": "0.5rem",
+            "margin": "1.5rem",
+            "space-lg": "1.5rem",
+            "gutter": "1rem",
+            "space-md": "1rem"
+          },
+          "fontFamily": {
+            "headline-lg-mobile": ["Inter"],
+            "body-lg": ["Inter"],
+            "label-md": ["Inter"],
+            "headline-lg": ["Inter"],
+            "display-lg": ["Inter"],
+            "title-md": ["Inter"],
+            "body-md": ["Inter"],
+            "mono": ["'JetBrains Mono'", "monospace"]
+          },
+          "fontSize": {
+            "headline-lg-mobile": ["26px", { "lineHeight": "34px", "fontWeight": "600" }],
+            "body-lg": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+            "label-md": ["12px", { "lineHeight": "16px", "fontWeight": "500" }],
+            "headline-lg": ["32px", { "lineHeight": "40px", "fontWeight": "600" }],
+            "display-lg": ["56px", { "lineHeight": "64px", "fontWeight": "700" }],
+            "title-md": ["18px", { "lineHeight": "24px", "fontWeight": "600" }],
+            "body-md": ["14px", { "lineHeight": "20px", "fontWeight": "400" }]
+          }
+        }
+      }
+    }
+  </script>
+<style>
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+      display: inline-block;
+      vertical-align: middle;
+      line-height: 1;
+    }
+    .scanline {
+      background: linear-gradient(rgba(47, 217, 244, 0) 50%, rgba(10, 15, 16, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
+      background-size: 100% 3px, 6px 100%;
+    }
+  </style>
+</head>
+<body class="bg-background text-on-surface font-body-md text-body-md antialiased min-h-screen flex flex-col selection:bg-primary-container selection:text-on-primary-container">
+<!-- TOP APP BAR -->
+<header class="bg-surface-container-low border-b border-outline-variant docked full-width top-0 z-50 flex items-center justify-between px-space-lg w-full h-14 sticky">
+<!-- Left: Brand + Operation State Tags -->
+<div class="flex items-center gap-space-md">
+<div class="flex items-center gap-space-sm">
+<span class="material-symbols-outlined text-primary text-[20px]" data-icon="terminal">terminal</span>
+<span class="font-title-md text-title-md text-on-surface tracking-wider font-semibold">RAPHAEL</span>
+</div>
+<div class="hidden sm:flex items-center gap-space-xs font-mono text-[11px] leading-tight">
+<span class="px-1.5 py-0.5 rounded bg-surface-variant border border-outline-variant text-primary-dim uppercase tracking-wider">RED TEAM OP // AUDIT FREEZE</span>
+<span class="flex items-center gap-1 px-1.5 py-0.5 rounded bg-surface-container-high border border-primary/30 text-primary">
+<span class="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span>
+          STATE: FROZEN [6e2157e6]
+        </span>
+</div>
+</div>
+<!-- Center: Navigation Links -->
+<nav class="hidden md:flex items-center space-x-6">
+<a class="text-on-surface-variant py-4 hover:text-primary transition-colors duration-150 active:scale-[0.98]" href="#">Dossiers</a>
+<a class="text-on-surface-variant py-4 hover:text-primary transition-colors duration-150 active:scale-[0.98]" href="#">Architecture</a>
+<a class="text-primary border-b-2 border-primary font-medium py-4 transition-colors duration-150" href="#">Registry</a>
+<a class="text-on-surface-variant py-4 hover:text-primary transition-colors duration-150 active:scale-[0.98]" href="#">Logs</a>
+</nav>
+<!-- Right: Trailing Actions -->
+<div class="flex items-center gap-space-sm">
+<div class="hidden lg:flex items-center gap-1 font-mono text-label-md text-label-md text-on-surface-variant mr-2">
+<button class="p-1.5 hover:text-primary hover:bg-surface-variant rounded transition-colors duration-150" title="Telemetry Database">
+<span class="material-symbols-outlined text-[18px]" data-icon="database">database</span>
+</button>
+<button class="p-1.5 hover:text-primary hover:bg-surface-variant rounded transition-colors duration-150" title="Research Help">
+<span class="material-symbols-outlined text-[18px]" data-icon="help">help</span>
+</button>
+</div>
+<button class="px-2.5 py-1 text-label-md text-label-md font-mono bg-surface-container-high border border-outline-variant rounded-lg text-on-surface hover:text-primary hover:bg-surface-variant transition-colors duration-150 active:scale-[0.98] flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[15px]" data-icon="terminal">terminal</span>
+        Query CLI
+      </button>
+<button class="px-2.5 py-1 text-label-md text-label-md font-mono bg-surface-variant border border-outline-variant rounded-lg text-on-surface-variant hover:text-primary transition-colors duration-150 active:scale-[0.98]">
+        Docs
+      </button>
+<div class="w-8 h-8 rounded-lg border border-outline-variant bg-surface-container flex items-center justify-center font-mono text-[11px] text-primary" title="Researcher access credentials avatar badge">
+        SEC#4
+      </div>
+</div>
+</header>
+<!-- MAIN CANVAS -->
+<main class="flex-1 w-full max-w-7xl mx-auto px-space-md md:px-space-lg py-space-md space-y-space-md">
+<!-- FREEZE STATUS HEADER HERO -->
+<div class="rounded-xl border border-outline-variant bg-surface-container-low p-space-md md:p-space-lg relative overflow-hidden">
+<div class="absolute -right-16 -top-16 w-64 h-64 bg-primary/5 rounded-full blur-3xl pointer-events-none"></div>
+<div class="flex flex-col lg:flex-row lg:items-center justify-between gap-space-md relative z-10">
+<div>
+<div class="flex items-center gap-2 mb-2 font-mono text-[11px] tracking-widest text-on-surface-variant">
+<span class="text-primary font-bold">EXEC_ID</span>
+<span>//</span>
+<span>SEC-AUDIT-2026</span>
+<span>//</span>
+<span class="text-tertiary">HASH LOCK CONFIRMED</span>
+</div>
+<div class="flex items-center gap-3">
+<div class="w-9 h-9 rounded-lg bg-surface-container-highest border border-primary/40 flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-[20px]" data-icon="lock" data-weight="fill" style="font-variation-settings: 'FILL' 1;">lock</span>
+</div>
+<h1 class="font-headline-lg text-headline-lg font-semibold tracking-tight text-on-surface flex items-center gap-2">
+              Freeze Status — <span class="font-mono text-primary font-bold">6e2157e6</span>
+</h1>
+</div>
+</div>
+<div class="flex items-center gap-space-sm flex-wrap">
+<button class="px-space-md py-2 rounded-lg border border-outline-variant bg-surface-container-high text-on-surface hover:text-primary hover:border-primary/50 text-label-md font-label-md font-mono transition-all duration-150 flex items-center gap-2 active:scale-[0.98]">
+<span class="material-symbols-outlined text-[16px]" data-icon="compare_arrows">compare_arrows</span>
+            Check Drift Delta
+          </button>
+<button class="px-space-md py-2 rounded-lg bg-primary text-on-primary font-semibold text-label-md font-label-md font-mono transition-all duration-150 flex items-center gap-2 shadow-[0_0_15px_rgba(47,217,244,0.35)] hover:bg-primary-fixed active:scale-[0.98]">
+<span class="material-symbols-outlined text-[16px]" data-icon="verified_user">verified_user</span>
+            Attest Runtime State
+          </button>
+</div>
+</div>
+<!-- BADGES ROW -->
+<div class="mt-space-md pt-space-md border-t border-outline-variant/60 grid grid-cols-2 md:grid-cols-4 gap-space-sm font-mono text-[11px]">
+<div class="p-2.5 rounded-lg bg-surface-container border border-outline-variant/40 flex flex-col gap-1">
+<span class="text-on-surface-variant uppercase text-[10px] tracking-wider">Production Runtime</span>
+<span class="text-on-surface font-medium flex items-center gap-1.5">
+<span class="w-2 h-2 rounded-full bg-primary"></span> Docker 26.1.4-ce
+          </span>
+</div>
+<div class="p-2.5 rounded-lg bg-surface-container border border-outline-variant/40 flex flex-col gap-1">
+<span class="text-on-surface-variant uppercase text-[10px] tracking-wider">Native Verified Fallback</span>
+<span class="text-tertiary font-medium flex items-center gap-1.5">
+<span class="w-2 h-2 rounded-full bg-tertiary"></span> Active Shadow (Bare Metal)
+          </span>
+</div>
+<div class="p-2.5 rounded-lg bg-surface-container border border-outline-variant/40 flex flex-col gap-1">
+<span class="text-on-surface-variant uppercase text-[10px] tracking-wider">Commit Lock</span>
+<span class="text-on-surface font-medium truncate" title="2026-10-28T04:19:00Z">
+            2026-10-28T04:19:00Z
+          </span>
+</div>
+<div class="p-2.5 rounded-lg bg-surface-container border border-outline-variant/40 flex flex-col gap-1">
+<span class="text-on-surface-variant uppercase text-[10px] tracking-wider">Verification Signature</span>
+<span class="text-primary font-medium flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]" data-icon="check_circle">check_circle</span> Validated [GPG: ED25519]
+          </span>
+</div>
+</div>
+</div>
+<!-- EXECUTION NOTICE BOX -->
+<div class="rounded-xl border border-primary/30 bg-surface-container-low p-space-md flex flex-col sm:flex-row items-start sm:items-center justify-between gap-space-md">
+<div class="flex items-start gap-3">
+<span class="material-symbols-outlined text-primary text-[24px] mt-0.5" data-icon="shield">shield</span>
+<div>
+<div class="flex items-center gap-2 mb-1">
+<h2 class="font-title-md text-title-md font-semibold text-on-surface">Red Team Execution Sandbox Notice</h2>
+<span class="px-1.5 py-0.5 rounded bg-primary/10 border border-primary/40 text-primary font-mono text-[10px] font-semibold">LOCKED_PROFILE</span>
+</div>
+<p class="text-on-surface-variant text-body-md font-body-md">
+            All deployment artifacts, microservice containers, sidecars, and verification hooks are pinned under immutable commit <code class="text-primary font-mono bg-surface-container px-1 py-0.5 rounded text-[12px]">6e2157e6</code>. Inbound configuration mutate requests are automatically redirected to dry-run validation mirrors.
+          </p>
+</div>
+</div>
+<div class="font-mono text-label-md text-on-surface-variant whitespace-nowrap bg-surface-container px-3 py-1.5 rounded-lg border border-outline-variant/50 self-end sm:self-center">
+        ENFORCE_POLICY: <span class="text-primary">DENY_ALL_MUTATE</span>
+</div>
+</div>
+<!-- KEY METRICS GRID (4 CARDS) -->
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-space-md">
+<!-- Card 1 -->
+<div class="rounded-xl border border-outline-variant bg-surface-container-low p-space-md flex flex-col justify-between hover:border-primary/40 transition-colors duration-150">
+<div>
+<div class="flex items-center justify-between font-mono text-[10px] text-on-surface-variant tracking-wider uppercase mb-2">
+<span>CRYO_IMG_SPEC</span>
+<span class="text-primary flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-primary"></span> IMMUTABLE</span>
+</div>
+<p class="font-headline-lg text-headline-lg font-bold text-on-surface tracking-tight font-mono">12 <span class="text-on-surface-variant text-[20px] font-normal">/ 12</span></p>
+<p class="text-label-md font-label-md text-on-surface-variant mt-1">Frozen Container Images</p>
+</div>
+<div class="mt-4 pt-3 border-t border-outline-variant/40 font-mono text-[11px] text-on-surface-variant">
+          Tag: <span class="text-primary">2026-10-28</span> | SHA-256 Digest Anchored
+        </div>
+</div>
+<!-- Card 2 -->
+<div class="rounded-xl border border-outline-variant bg-surface-container-low p-space-md flex flex-col justify-between hover:border-tertiary/40 transition-colors duration-150">
+<div>
+<div class="flex items-center justify-between font-mono text-[10px] text-on-surface-variant tracking-wider uppercase mb-2">
+<span>FALLBACK_MON</span>
+<span class="text-tertiary flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-tertiary"></span> VERIFIED FALLBACK</span>
+</div>
+<p class="font-headline-lg text-headline-lg font-bold text-on-surface tracking-tight font-mono">10 <span class="text-on-surface-variant text-[20px] font-normal">/ 10</span></p>
+<p class="text-label-md font-label-md text-on-surface-variant mt-1">Native Boot &amp; Health Checks</p>
+</div>
+<div class="mt-4 pt-3 border-t border-outline-variant/40 font-mono text-[11px] text-on-surface-variant">
+          Respawn Proven: <span class="text-tertiary">100%</span> (Mean recovery 1.4s)
+        </div>
+</div>
+<!-- Card 3 -->
+<div class="rounded-xl border border-outline-variant bg-surface-container-low p-space-md flex flex-col justify-between hover:border-secondary-dim/40 transition-colors duration-150">
+<div>
+<div class="flex items-center justify-between font-mono text-[10px] text-on-surface-variant tracking-wider uppercase mb-2">
+<span>MIRROR_CONCUR</span>
+<span class="text-secondary-dim flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-secondary-dim"></span> CONSISTENT</span>
+</div>
+<p class="font-headline-lg text-headline-lg font-bold text-on-surface tracking-tight font-mono">12 <span class="text-on-surface-variant text-[20px] font-normal">/ 12</span></p>
+<p class="text-label-md font-label-md text-on-surface-variant mt-1">State Consistency Synchronization</p>
+</div>
+<div class="mt-4 pt-3 border-t border-outline-variant/40 font-mono text-[11px] text-on-surface-variant">
+          Delta: <span class="text-secondary">0 drift</span> detected across shadows
+        </div>
+</div>
+<!-- Card 4 -->
+<div class="rounded-xl border border-outline-variant bg-surface-container-low p-space-md flex flex-col justify-between hover:border-primary/40 transition-colors duration-150">
+<div>
+<div class="flex items-center justify-between font-mono text-[10px] text-on-surface-variant tracking-wider uppercase mb-2">
+<span>CUTOVER_BENCH</span>
+<span class="text-primary flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-primary"></span> READY</span>
+</div>
+<p class="font-headline-lg text-headline-lg font-bold text-primary tracking-tight font-mono">&lt; 240ms</p>
+<p class="text-label-md font-label-md text-on-surface-variant mt-1">Docker to Native Cutover Latency</p>
+</div>
+<div class="mt-4 pt-3 border-t border-outline-variant/40 font-mono text-[11px] text-on-surface-variant">
+          Automated Failover Target: <span class="text-on-surface">Hot Standby</span>
+</div>
+</div>
+</div>
+<!-- COMPONENT INVENTORY & DUAL-RUNTIME STATUS TABLE -->
+<div class="rounded-xl border border-outline-variant bg-surface-container-low overflow-hidden">
+<div class="p-space-md border-b border-outline-variant flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 bg-surface-container">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-[20px]" data-icon="layers">layers</span>
+<h2 class="font-title-md text-title-md font-semibold text-on-surface">Component Inventory &amp; Dual-Runtime Status</h2>
+</div>
+<div class="font-mono text-label-md text-on-surface-variant flex items-center gap-3">
+<span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-primary"></span> Production (Docker)</span>
+<span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-tertiary"></span> Shadow (Native Bare-Metal)</span>
+</div>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left font-mono text-[12px] border-collapse">
+<thead>
+<tr class="border-b border-outline-variant/60 bg-surface-container-high/40 text-on-surface-variant text-[11px] tracking-wider uppercase">
+<th class="py-3 px-4">Component / Binary</th>
+<th class="py-3 px-4">Docker Status</th>
+<th class="py-3 px-4">Native Shadow Status</th>
+<th class="py-3 px-4">Port / IPC Socket</th>
+<th class="py-3 px-4">Hash / Attestation</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-outline-variant/30 text-on-surface">
+<!-- Row 1 -->
+<tr class="hover:bg-surface-variant/30 transition-colors">
+<td class="py-3.5 px-4 font-semibold text-primary flex items-center gap-2">
+<span class="material-symbols-outlined text-[16px] text-outline" data-icon="memory">memory</span>
+                raphael-core-governor
+              </td>
+<td class="py-3.5 px-4">
+<span class="inline-flex items-center gap-1.5 text-primary">
+<span class="w-1.5 h-1.5 rounded-full bg-primary"></span> Frozen v2026-10-28 (Running)
+                </span>
+</td>
+<td class="py-3.5 px-4">
+<span class="inline-flex items-center gap-1.5 text-tertiary">
+<span class="w-1.5 h-1.5 rounded-full bg-tertiary"></span> Warm Standby (Verified)
+                </span>
+</td>
+<td class="py-3.5 px-4 text-on-surface-variant">/run/raphael/gov.sock</td>
+<td class="py-3.5 px-4 text-on-surface-variant">
+<span class="text-on-surface">0x89fa...11c0</span> <span class="text-primary text-[10px]">[Merkle Valid]</span>
+</td>
+</tr>
+<!-- Row 2 -->
+<tr class="hover:bg-surface-variant/30 transition-colors">
+<td class="py-3.5 px-4 font-semibold text-primary flex items-center gap-2">
+<span class="material-symbols-outlined text-[16px] text-outline" data-icon="bug_report">bug_report</span>
+                agent-fuzz-canary
+              </td>
+<td class="py-3.5 px-4">
+<span class="inline-flex items-center gap-1.5 text-primary">
+<span class="w-1.5 h-1.5 rounded-full bg-primary"></span> Frozen v2026-10-28 (Running)
+                </span>
+</td>
+<td class="py-3.5 px-4">
+<span class="inline-flex items-center gap-1.5 text-tertiary">
+<span class="w-1.5 h-1.5 rounded-full bg-tertiary"></span> Warm Standby (Verified)
+                </span>
+</td>
+<td class="py-3.5 px-4 text-on-surface-variant">127.0.0.1:9042</td>
+<td class="py-3.5 px-4 text-on-surface-variant">
+<span class="text-on-surface">0x4b7e...ae29</span> <span class="text-primary text-[10px]">[Merkle Valid]</span>
+</td>
+</tr>
+<!-- Row 3 -->
+<tr class="hover:bg-surface-variant/30 transition-colors">
+<td class="py-3.5 px-4 font-semibold text-primary flex items-center gap-2">
+<span class="material-symbols-outlined text-[16px] text-outline" data-icon="hub">hub</span>
+                provenance-graph-v2
+              </td>
+<td class="py-3.5 px-4">
+<span class="inline-flex items-center gap-1.5 text-primary">
+<span class="w-1.5 h-1.5 rounded-full bg-primary"></span> Frozen v2026-10-28 (Running)
+                </span>
+</td>
+<td class="py-3.5 px-4">
+<span class="inline-flex items-center gap-1.5 text-tertiary">
+<span class="w-1.5 h-1.5 rounded-full bg-tertiary"></span> Warm Standby (Verified)
+                </span>
+</td>
+<td class="py-3.5 px-4 text-on-surface-variant">127.0.0.1:9043</td>
+<td class="py-3.5 px-4 text-on-surface-variant">
+<span class="text-on-surface">0xec29...88b2</span> <span class="text-primary text-[10px]">[Merkle Valid]</span>
+</td>
+</tr>
+<!-- Row 4 -->
+<tr class="hover:bg-surface-variant/30 transition-colors">
+<td class="py-3.5 px-4 font-semibold text-primary flex items-center gap-2">
+<span class="material-symbols-outlined text-[16px] text-outline" data-icon="enhanced_encryption">enhanced_encryption</span>
+                formal-zk-verifier
+              </td>
+<td class="py-3.5 px-4">
+<span class="inline-flex items-center gap-1.5 text-primary">
+<span class="w-1.5 h-1.5 rounded-full bg-primary"></span> Frozen v2026-10-28 (Running)
+                </span>
+</td>
+<td class="py-3.5 px-4">
+<span class="inline-flex items-center gap-1.5 text-tertiary">
+<span class="w-1.5 h-1.5 rounded-full bg-tertiary"></span> Warm Standby (Verified)
+                </span>
+</td>
+<td class="py-3.5 px-4 text-on-surface-variant">uds://verifier.ipc</td>
+<td class="py-3.5 px-4 text-on-surface-variant">
+<span class="text-on-surface">0x73a1...fe04</span> <span class="text-primary text-[10px]">[Merkle Valid]</span>
+</td>
+</tr>
+<!-- Row 5 -->
+<tr class="hover:bg-surface-variant/30 transition-colors">
+<td class="py-3.5 px-4 font-semibold text-primary flex items-center gap-2">
+<span class="material-symbols-outlined text-[16px] text-outline" data-icon="polyline">polyline</span>
+                ebpf-syscall-sensor
+              </td>
+<td class="py-3.5 px-4">
+<span class="inline-flex items-center gap-1.5 text-primary">
+<span class="w-1.5 h-1.5 rounded-full bg-primary"></span> Frozen v2026-10-28 (Running)
+                </span>
+</td>
+<td class="py-3.5 px-4">
+<span class="inline-flex items-center gap-1.5 text-secondary">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span> Direct Host Hook (Active)
+                </span>
+</td>
+<td class="py-3.5 px-4 text-on-surface-variant">Ring Buffer #0</td>
+<td class="py-3.5 px-4 text-on-surface-variant">
+<span class="text-on-surface">0x1102...00ef</span> <span class="text-primary text-[10px]">[Merkle Valid]</span>
+</td>
+</tr>
+<!-- Row 6 -->
+<tr class="hover:bg-surface-variant/30 transition-colors">
+<td class="py-3.5 px-4 font-semibold text-primary flex items-center gap-2">
+<span class="material-symbols-outlined text-[16px] text-outline" data-icon="construction">construction</span>
+                kali-tool-bridge
+              </td>
+<td class="py-3.5 px-4">
+<span class="inline-flex items-center gap-1.5 text-primary">
+<span class="w-1.5 h-1.5 rounded-full bg-primary"></span> Frozen v2026-10-28 (Running)
+                </span>
+</td>
+<td class="py-3.5 px-4">
+<span class="inline-flex items-center gap-1.5 text-tertiary">
+<span class="w-1.5 h-1.5 rounded-full bg-tertiary"></span> Warm Standby (Verified)
+                </span>
+</td>
+<td class="py-3.5 px-4 text-on-surface-variant">127.0.0.1:8890</td>
+<td class="py-3.5 px-4 text-on-surface-variant">
+<span class="text-on-surface">0x559a...33d8</span> <span class="text-primary text-[10px]">[Merkle Valid]</span>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<!-- LOWER TWO-COLUMN GRID -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-space-md">
+<!-- LEFT COLUMN: CUTOVER TRIGGERS -->
+<div class="rounded-xl border border-outline-variant bg-surface-container-low p-space-md flex flex-col justify-between">
+<div>
+<div class="flex items-center justify-between pb-space-sm border-b border-outline-variant mb-space-md">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-[20px]" data-icon="sync_problem">sync_problem</span>
+<h3 class="font-title-md text-title-md font-semibold text-on-surface">Cutover Triggers</h3>
+</div>
+<span class="font-mono text-[11px] px-2 py-0.5 rounded bg-surface-container-high border border-outline-variant text-on-surface-variant">Docker → Native Shadow</span>
+</div>
+<div class="space-y-space-sm">
+<!-- Trigger 1 -->
+<div class="p-3 rounded-lg bg-surface-container border border-outline-variant/50 hover:border-outline-variant transition-colors">
+<div class="flex items-center justify-between font-mono text-[11px] mb-1">
+<span class="text-primary font-semibold">TRG-01: Container Isolation Breach</span>
+<span class="text-tertiary">AUTO-ARMED</span>
+</div>
+<p class="text-body-md font-body-md text-on-surface-variant text-[13px]">
+                Cgroup OOM stall or seccomp violation (&gt;3 consecutive heartbeat misses). Triggers instant bare-metal daemon adoption.
+              </p>
+</div>
+<!-- Trigger 2 -->
+<div class="p-3 rounded-lg bg-surface-container border border-outline-variant/50 hover:border-outline-variant transition-colors">
+<div class="flex items-center justify-between font-mono text-[11px] mb-1">
+<span class="text-primary font-semibold">TRG-02: Hardware Enclave / SGX Desync</span>
+<span class="text-tertiary">AUTO-ARMED</span>
+</div>
+<p class="text-body-md font-body-md text-on-surface-variant text-[13px]">
+                Zk-proof validation stall exceeding 10ms threshold triggers immediate ring-0 bypass to local shadow verifier.
+              </p>
+</div>
+<!-- Trigger 3 -->
+<div class="p-3 rounded-lg bg-surface-container border border-outline-variant/50 hover:border-outline-variant transition-colors">
+<div class="flex items-center justify-between font-mono text-[11px] mb-1">
+<span class="text-secondary font-semibold">TRG-03: Manual Red Team Failover</span>
+<span class="text-on-surface-variant">PGP_AUTH_REQ</span>
+</div>
+<p class="text-body-md font-body-md text-on-surface-variant text-[13px]">
+                Direct operator invocation via <code class="font-mono text-primary text-[11px]">CUTOVER_FORCE=1</code> signed with verified red team hardware key.
+              </p>
+</div>
+</div>
+</div>
+<div class="mt-space-md pt-space-sm border-t border-outline-variant/60 flex items-center justify-between font-mono text-[11px]">
+<span class="text-on-surface-variant">Latency SLA: <strong class="text-primary">≤ 240ms</strong></span>
+<span class="text-on-surface-variant">Failover Pool: <strong class="text-tertiary">HOT (Zero Warmup)</strong></span>
+</div>
+</div>
+<!-- RIGHT COLUMN: REPRODUCE & ORCHESTRATE CLI COMMANDS BLOCK -->
+<div class="rounded-xl border border-outline-variant bg-surface-container-lowest p-space-md flex flex-col justify-between font-mono">
+<div>
+<div class="flex items-center justify-between pb-space-sm border-b border-outline-variant/40 mb-space-sm text-[12px]">
+<div class="flex items-center gap-2 text-on-surface-variant">
+<span class="w-2.5 h-2.5 rounded-full bg-error/70"></span>
+<span class="w-2.5 h-2.5 rounded-full bg-tertiary/70"></span>
+<span class="w-2.5 h-2.5 rounded-full bg-primary/70"></span>
+<span class="ml-2 text-on-surface">audit-orchestrate.bash</span>
+</div>
+<button class="flex items-center gap-1 text-[11px] text-on-surface-variant hover:text-primary transition-colors duration-150" onclick="navigator.clipboard.writeText('# Raphael Freeze Reproduction Sequence\n./scripts/setup-kali.sh --strict --freeze=6e2157e6\n./scripts/freeze_images.sh --verify-merkle --digest=sha256\n./scripts/native_up.sh --shadow-mode=standby --ipc-pin'); this.innerText='COPIED!'">
+<span class="material-symbols-outlined text-[14px]" data-icon="content_copy">content_copy</span>
+<span>Copy Block</span>
+</button>
+</div>
+<div class="text-[12px] space-y-2 text-on-surface-variant select-all">
+<p class="text-outline"># 1. Initialize hermetic security suite</p>
+<p class="text-on-surface"><span class="text-primary">$</span> ./scripts/setup-kali.sh --strict --freeze=6e2157e6</p>
+<p class="text-outline pt-1"># 2. Lock &amp; attest container state digest</p>
+<p class="text-on-surface"><span class="text-primary">$</span> ./scripts/freeze_images.sh --verify-merkle --digest=sha256</p>
+<p class="text-outline pt-1"># 3. Boot local bare-metal shadow daemons</p>
+<p class="text-on-surface"><span class="text-primary">$</span> ./scripts/native_up.sh --shadow-mode=standby --ipc-pin</p>
+<div class="p-2.5 rounded bg-surface-container border border-outline-variant/30 text-[11px] space-y-1 mt-3">
+<div class="text-primary flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]" data-icon="check">check</span>
+                [+] SHA-256 CHECK: PASSED (12 of 12 images matched)
+              </div>
+<div class="text-tertiary flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]" data-icon="check">check</span>
+                [+] BARE-METAL STANDBY POOL: HEALTHY (Latency &lt; 0.9ms)
+              </div>
+<div class="text-on-surface-variant">
+                [i] READY FOR RED TEAM TEST HARNESS INGESTION
+              </div>
+</div>
+</div>
+</div>
+<div class="mt-4 pt-3 border-t border-outline-variant/40 flex items-center justify-between text-[11px] text-on-surface-variant">
+<span>Runner: <strong class="text-on-surface">raphael-runner-04-eu</strong></span>
+<span class="text-primary">EXIT: 0 (SUCCESS)</span>
+</div>
+</div>
+</div>
+</main>
+<!-- FOOTER -->
+<footer class="bg-surface-container-lowest border-t border-outline-variant docked full-width bottom-0 mt-space-lg">
+<div class="flex flex-col md:flex-row justify-between items-center px-space-lg py-space-md w-full gap-space-sm max-w-7xl mx-auto">
+<div class="flex items-center gap-2">
+<span class="font-title-md text-title-md text-on-surface font-semibold">RAPHAEL</span>
+<span class="text-outline">/</span>
+<span class="text-on-surface-variant font-body-md text-body-md text-[13px]">© 2025 RAPHAEL Research Systems. Open Research &amp; Architecture Licensing. Strict integrity protocols enforced.</span>
+</div>
+<div class="flex items-center gap-space-md font-body-md text-body-md text-[13px] text-on-surface-variant flex-wrap">
+<a class="hover:text-primary transition-colors duration-150" href="#">Ethics Disclosure</a>
+<a class="hover:text-primary transition-colors duration-150" href="#">Architecture Specs</a>
+<a class="hover:text-primary transition-colors duration-150" href="#">API Protocols</a>
+<a class="hover:text-primary transition-colors duration-150" href="#">Research License</a>
+<a class="hover:text-primary transition-colors duration-150 flex items-center gap-1 text-on-surface font-medium" href="#">
+<span class="w-2 h-2 rounded-full bg-primary animate-pulse"></span>
+          Telemetry Status
+        </a>
+</div>
+</div>
+</footer>
+</body></html>
