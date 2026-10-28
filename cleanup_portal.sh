@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
-set -euo pipefail
+set -e
 cd /home/yaser/raphael-portal
 git add -A
 git -c user.name="The-Despicable" -c user.email="raphael-portal@users.noreply.github.com" \
-  commit -m "feat(portal): add Raphael freeze-status page (Stitch design + frozen state data)"
+  commit -m "chore: remove temp scripts accidentally committed"
 git push origin main
 git rev-parse HEAD
-echo "pushed"
+git status --porcelain | wc -l
